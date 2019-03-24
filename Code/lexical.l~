@@ -52,7 +52,7 @@ letter [_a-zA-Z]
 \n { printf("NL\n"); }
 \r { printf("CR\n"); }
 {letter}({letter}|{digit})* { printf("ID %s\n", yytext); }
-. { printf("Error type A at Line %d:Mysterious characters \'%s\'\n", yylineno, yytext); }
+. { printf("2333333\n"); }
 %%
 int _8to10(const char* strHex) {
 	int i = 0, len = 0, temp = 0;
