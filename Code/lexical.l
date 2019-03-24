@@ -1,6 +1,7 @@
 %option yylineno
 %{
     #include <stdio.h>
+    #include <math.h>
     int _16to10(char* strHex);
     int _8to10(char* strHex);
 %}
@@ -48,31 +49,34 @@ letter [_a-zA-Z]
 "if" { printf("IF\n"); }
 "else" { printf("ELSE\n"); }
 "while" { printf("WHILE\n"); }
-letter(letter|digit)* { printf("ID %f\n", yytext) }
-. { printf("Error type A at Line %d:Mysterious characters \'%s\'\n", yylineno, yytext) }
+letter(letter|digit)* { printf("ID %f\n", yytext); }
+. { printf("Error type A at Line %d:Mysterious characters \'%s\'\n", yylineno, yytext); }
 
 %%
-int _8to10(char* strHex) {
+int _8to10(const char* strHex) {
 	int i = 0, len = 0, temp = 0;
-	//len = str.length();
 	int nDec = 0;
 	len = strlen(strHex);
+	int j;
+	int power = 1;
+	for (j = 1; j < len; j++)
+		power *= 8;
 	for (i = 0; strHex[i] != '\0'; ++i)
 	{
-		temp = strHex[i] - '0'; 
-		nDec += (temp*pow(8, len - 1 - i));
+		 temp = strHex[i] - '0'; 
+		nDec += (temp*power);
+		power = power / 8;
 	}
 	return nDec;
-
-
 }
-int _16to10(char* strHex){
-	//string str = strHex;
+int _16to10(const char* strHex){
 	int i = 0, len = 0, temp = 0;
-	//len = str.length();
 	int nDec = 0;
-
+	int j;
+	int power = 1;
 	len = strlen(strHex);
+	for (j = 3; j < len; j++)
+		power *= 16;
 	for (i = 2; strHex[i] != '\0'; ++i)
 	{
 		switch (strHex[i])
@@ -91,7 +95,8 @@ int _16to10(char* strHex){
 		case 'f': temp = 15; break;
 		default: temp = strHex[i] - '0'; break;
 		}
-		nDec += (temp*pow(16,len - 1 - i));
+		nDec += (temp*power);
+		power = power / 16;
 	}
 	return nDec;
 	
