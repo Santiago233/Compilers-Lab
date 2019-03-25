@@ -2,6 +2,7 @@
 %{
     #include <stdio.h>
     #include <math.h>
+	#include <stdlib.h>
 %}
 digit [0-9]
 letter [_a-zA-Z]
@@ -24,8 +25,8 @@ letter [_a-zA-Z]
 0[0-7]*[89]+[0-9]* {
 		printf("Error type A at Line %d:Wrong Octal Number \'%s\'\n", yylineno, yytext);
 	}
-(([1-9]{digit}*)|0)"."{digit}* {
-		printf("Float value %s\n", yytext);
+(([1-9]{digit}*)|0)"."{digit}+ {
+		printf("Float value %f\n", atof(yytext));
 	}
 0{digit}*"."{digit}* {
 		printf("Error type A at Line %d:Wrong Float value \'%s\'\n", yylineno, yytext);
