@@ -2,10 +2,13 @@
 
 int main(int argc, char ** argv){
     int i;
-    if (argc < 2){
+    /*if (argc < 2){
         yylex();
         printf("Lexical analysis of one file completed!\n");
         return 0;
+    }*/
+    if(argc < 2){
+        return 1;
     }
     for(i = 1; i < argc; i++){
         FILE *f = fopen(argv[i], "r");
@@ -14,9 +17,11 @@ int main(int argc, char ** argv){
             return 1;
         }
         yyrestart(f);
-        yylex();
+        //yylex();
+        yyparse();
         fclose(f);
-        printf("Lexical analysis of one file completed!\n");
+        //printf("Lexical analysis of one file completed!\n");
+        printf("Gramma analysis of one file completed!\n");
     }
     return 0;
 }

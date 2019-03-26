@@ -3,6 +3,7 @@
     #include <stdio.h>
     #include <math.h>
 	#include <stdlib.h>
+	#include "syntax.tab.h"
 %}
 digit [0-9]
 letter [_a-zA-Z]
@@ -10,14 +11,17 @@ letter [_a-zA-Z]
 %%
 ([1-9]{digit}*)|0 {
 		printf("INT_10, decimal integer value %d\n", atoi(yytext));
+		return INT;
 	}
 0[xX][0-9a-fA-F]+ {
         int int_yytext = _16to10(yytext);
         printf("INT_16, hexadecimal integer value %d\n", int_yytext);
+		return INT;
     }
 0[0-7]+ {
         int int_yytext = _8to10(yytext);
         printf("INT_8, octal integer value %d\n", int_yytext);
+		return INT;
     }
 0[xX][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]* {
 		printf("Error type A at Line %d:Wrong Hexadecimal Number \'%s\'\n", yylineno, yytext);
@@ -27,99 +31,130 @@ letter [_a-zA-Z]
 	}
 (([1-9]{digit}*)|0)"."{digit}+ {
 		printf("Float value %f\n", atof(yytext));
+		return Float;
 	}
 0{digit}*"."{digit}* {
 		printf("Error type A at Line %d:Wrong Float value \'%s\'\n", yylineno, yytext);
 	}
 ";" {
 		printf("SEMI\n");
+		return SEMI;
 	}
 "," {
 		printf("COMMA\n");
+		return COMMA;
 	}
 "=" {
 		printf("ASSIGNOP\n");
+		return ASSIGNOP;
 	}
 ">" {
 		printf("RELOP_DAYU\n");
+		return RELOP;
 	}
 "<" {
 		printf("RELOP_XIAOYU\n");
+		return RELOP;
 	}
 ">=" {
 		printf("RELOP_DAYUDENGYU\n");
+		return RELOP;
 	}
 "<=" {
 		printf("RELOP_XIAOYUDENGYU\n");
+		return RELOP;
 	}
 "==" {
 		printf("RELOP_LIANDENG\n");
+		return RELOP;
 	}
 "!=" {
 		printf("RELOP_BUDENGYU\n");
+		return RELOP;
 	}
 "+" {
 		printf("PLUS\n");
+		return PLUS;
 	}
 "-" {
 		printf("MINUS\n");
+		return MINUS;
 	}
 "*" {
 		printf("STAR\n");
+		return STAR;
 	}
 "/" {
 		printf("DIV\n");
+		return DIV;
 	}
 "&&" {
 		printf("AND\n");
+		return AND;
 	}
 "||" {
 		printf("OR\n");
+		return OR;
 	}
 "." {
 		printf("DOT\n");
+		return DOT;
 	}
 "!" {
 		printf("NOT\n");
+		return NOT;
 	}
 "(" {
 		printf("LP\n");
+		return LP;
 	}
 ")" {
 		printf("RP\n");
+		return RP;
 	}
 "[" {
 		printf("LB\n");
+		return LB;
 	}
 "]" {
 		printf("RB\n");
+		return RB;
 	}
 "{" {
 		printf("LC\n");
+		return LC;
 	}
 "}" {
 		printf("RC\n");
+		return RC;
 	}
 "int" {
 		printf("TYPE_INT\n");
+		return TYPE;
 	}
 "float" {
 		printf("TYPE_FLOAT\n");
+		return TYPE;
 	}
 "struct" {
 		printf("STRCUT\n");
+		return STRUCT;
 	}
 "return" {
 		printf("RETURN\n");
+		return RETURN;
 	}
 "if" {
 		printf("IF\n");
+		return IF;
 	}
 "else" {
 		printf("ELSE\n");
+		return ELSE;
 	}
 "while" {
 		printf("WHILE\n");
+		return WHILE;
 	}
 " " {
 		printf("SPACE\n");
@@ -135,6 +170,7 @@ letter [_a-zA-Z]
 	}
 {letter}({letter}|{digit})* {
 		printf("ID %s\n", yytext);
+		return ID;
 	}
 {digit}+{letter}+({letter}|{digit})* {
 		printf("Error type A at Line %d:Wrong ID \'%s\'\n", yylineno, yytext);
