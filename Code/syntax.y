@@ -24,6 +24,7 @@
 %token RB
 %token LC
 %token RC
+%token TYPE
 %token STRUCT
 %token RETURN
 %token IF
@@ -48,8 +49,7 @@ ExtDecList: VarDec
 		|	VarDec  COMMA   ExtDecList
 		;
 
-							
-Specifier:  TYPE		
+Specifier:  TYPE
 		|	StructSpecifier
 		;
 

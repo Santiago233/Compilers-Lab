@@ -31,7 +31,7 @@ letter [_a-zA-Z]
 	}
 (([1-9]{digit}*)|0)"."{digit}+ {
 		printf("Float value %f\n", atof(yytext));
-		return Float;
+		return FLOAT;
 	}
 0{digit}*"."{digit}* {
 		printf("Error type A at Line %d:Wrong Float value \'%s\'\n", yylineno, yytext);
