@@ -4,6 +4,12 @@
     #include <math.h>
 	#include <stdlib.h>
 	#include "syntax.tab.h"
+	int yycolumn = 1;
+	#define YY_USER_ACTION
+		yylloc.first_line = yylloc.last_line = yylineno;	\
+		yylloc.first_column = yycolumn;	\
+		yylloc.last_column = yycolumn + yyleng -1;	\
+		yycolumn += yyleng;
 %}
 digit [0-9]
 letter [_a-zA-Z]
@@ -164,6 +170,7 @@ letter [_a-zA-Z]
 	}
 \n {
 		printf("NL\n");
+		yycolumn = 1;
 	}
 \r {
 		printf("CR\n");
