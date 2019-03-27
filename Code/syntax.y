@@ -40,7 +40,7 @@
 %left RELOP
 %left PLUS MINUS
 %left STAR DIV
-%right NOT
+%right NOT MINUS
 %left LP RP LB RB DOT
 
 /* actions to conflicts between shift and reduce */
@@ -58,10 +58,19 @@ ExtDefList: ExtDef  ExtDefList
 ExtDef: Specifier   ExtDecList  SEMI
 		| 	Specifier   SEMI
 		|   Specifier   FunDec  CompSt
+        |   error   SEMI    { printf("%d Error type B: 变量缺少类型定义， 如直接a;\n", @1); }
+        |   error   FunDec  CompSt  { printf("%d Error type B: 函数缺少类型定义， 如直接a;\n", @1); }
+        |   Specifier   error   SEMI    { printf("%d Error type B: 缺少与类型相关的变量定义， 如直接int int;\n", @1); }
+        |   Specifier   error   CompSt  { printf("%d Error type B: 缺少与类型相关的函数名定义， 如直接int int;\n", @1); }
+        |   Specifier   ExtDecList  error   StrangeDef  { printf("%d Error type B: 分号缺失;\n", @2); }
+        |   Specifier   error   StrangeDef  { printf("%d Error type B: 分号缺失;\n", @1); }
+        |   Specifier   ExtDecList  error   SEMI    { printf("%d Error type B: 分号缺失;\n", @2); }
+        |   Specifier   error   SEMI    { printf("%d Error type B: 分号缺失;\n", @1); }
 		;
 
 ExtDecList: VarDec
 		|	VarDec  COMMA   ExtDecList
+        |   VarDec  error   ExtDecList  { printf("%d Error type B: 全局变量定义缺少‘，’，如a.b\n", @1); }
 		;
 
 Specifier:  TYPE
@@ -70,6 +79,11 @@ Specifier:  TYPE
 
 StructSpecifier:    STRUCT  OptTag  LC  DefList RC
 		|	STRUCT  Tag
+        |   STRUCT  error   LC  DefList RC  { printf("%d Error type B: 结构类型名非法\n", @1); }
+        |   STRUCT  OptTag  error   RC  { printf("%d Error type B: 结构体定义的左括号缺失\n", @2); }
+        |   STRUCT  OptTag  LC  DefList error   StrangeDef  { printf("%d Error type B: 结构体定义的右括号缺失\n", @4); }
+        |   STRUCT  OptTag  LC  DefList error   SEMI    { printf("%d Error type B: 结构体定义的右括号缺失\n", @4); }
+        |   STRUCT  error   SEMI    { printf("%d Error type B: 初始化新结构变量类型名非法\n", @1); }
 		;
 
 OptTag: ID
@@ -147,6 +161,9 @@ Exp:    Exp ASSIGNOP    Exp
 Args:   Exp COMMA   Args
 		|	Exp
 		;
+
+StrangeDef: FunDec  CompSt
+        ;
 
 %%
 yyerror(char* msg){
