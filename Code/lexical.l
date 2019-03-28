@@ -16,17 +16,17 @@ letter [_a-zA-Z]
 
 %%
 ([1-9]{digit}*)|0 {
-		printf("INT_10, decimal integer value %d\n", atoi(yytext));
+		//printf("INT_10, decimal integer value %d\n", atoi(yytext));
 		return INT;
 	}
 0[xX][0-9a-fA-F]+ {
         int int_yytext = _16to10(yytext);
-        printf("INT_16, hexadecimal integer value %d\n", int_yytext);
+        //printf("INT_16, hexadecimal integer value %d\n", int_yytext);
 		return INT;
     }
 0[0-7]+ {
         int int_yytext = _8to10(yytext);
-        printf("INT_8, octal integer value %d\n", int_yytext);
+        //printf("INT_8, octal integer value %d\n", int_yytext);
 		return INT;
     }
 0[xX][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]* {
@@ -36,147 +36,147 @@ letter [_a-zA-Z]
 		printf("Error type A at Line %d:Wrong Octal Number \'%s\'\n", yylineno, yytext);
 	}
 (([1-9]{digit}*)|0)"."{digit}+ {
-		printf("Float value %f\n", atof(yytext));
+		//printf("Float value %f\n", atof(yytext));
 		return FLOAT;
 	}
 0{digit}*"."{digit}* {
 		printf("Error type A at Line %d:Wrong Float value \'%s\'\n", yylineno, yytext);
 	}
 ";" {
-		printf("SEMI\n");
+		//printf("SEMI\n");
 		return SEMI;
 	}
 "," {
-		printf("COMMA\n");
+		//printf("COMMA\n");
 		return COMMA;
 	}
 "=" {
-		printf("ASSIGNOP\n");
+		//printf("ASSIGNOP\n");
 		return ASSIGNOP;
 	}
 ">" {
-		printf("RELOP_DAYU\n");
+		//printf("RELOP_DAYU\n");
 		return RELOP;
 	}
 "<" {
-		printf("RELOP_XIAOYU\n");
+		//printf("RELOP_XIAOYU\n");
 		return RELOP;
 	}
 ">=" {
-		printf("RELOP_DAYUDENGYU\n");
+		//printf("RELOP_DAYUDENGYU\n");
 		return RELOP;
 	}
 "<=" {
-		printf("RELOP_XIAOYUDENGYU\n");
+		//printf("RELOP_XIAOYUDENGYU\n");
 		return RELOP;
 	}
 "==" {
-		printf("RELOP_LIANDENG\n");
+		//printf("RELOP_LIANDENG\n");
 		return RELOP;
 	}
 "!=" {
-		printf("RELOP_BUDENGYU\n");
+		//printf("RELOP_BUDENGYU\n");
 		return RELOP;
 	}
 "+" {
-		printf("PLUS\n");
+		//printf("PLUS\n");
 		return PLUS;
 	}
 "-" {
-		printf("MINUS\n");
+		//printf("MINUS\n");
 		return MINUS;
 	}
 "*" {
-		printf("STAR\n");
+		//printf("STAR\n");
 		return STAR;
 	}
 "/" {
-		printf("DIV\n");
+		//printf("DIV\n");
 		return DIV;
 	}
 "&&" {
-		printf("AND\n");
+		//printf("AND\n");
 		return AND;
 	}
 "||" {
-		printf("OR\n");
+		//printf("OR\n");
 		return OR;
 	}
 "." {
-		printf("DOT\n");
+		//printf("DOT\n");
 		return DOT;
 	}
 "!" {
-		printf("NOT\n");
+		//printf("NOT\n");
 		return NOT;
 	}
 "(" {
-		printf("LP\n");
+		//printf("LP\n");
 		return LP;
 	}
 ")" {
-		printf("RP\n");
+		//printf("RP\n");
 		return RP;
 	}
 "[" {
-		printf("LB\n");
+		//printf("LB\n");
 		return LB;
 	}
 "]" {
-		printf("RB\n");
+		//printf("RB\n");
 		return RB;
 	}
 "{" {
-		printf("LC\n");
+		//printf("LC\n");
 		return LC;
 	}
 "}" {
-		printf("RC\n");
+		//printf("RC\n");
 		return RC;
 	}
 "int" {
-		printf("TYPE_INT\n");
+		//printf("TYPE_INT\n");
 		return TYPE;
 	}
 "float" {
-		printf("TYPE_FLOAT\n");
+		//printf("TYPE_FLOAT\n");
 		return TYPE;
 	}
 "struct" {
-		printf("STRCUT\n");
+		//printf("STRCUT\n");
 		return STRUCT;
 	}
 "return" {
-		printf("RETURN\n");
+		//printf("RETURN\n");
 		return RETURN;
 	}
 "if" {
-		printf("IF\n");
+		//printf("IF\n");
 		return IF;
 	}
 "else" {
-		printf("ELSE\n");
+		//printf("ELSE\n");
 		return ELSE;
 	}
 "while" {
-		printf("WHILE\n");
+		//printf("WHILE\n");
 		return WHILE;
 	}
 " " {
-		printf("SPACE\n");
+		//printf("SPACE\n");
 	}
 \t {
-		printf("TAB\n");
+		//printf("TAB\n");
 	}
 \n {
-		printf("NL\n");
+		//printf("NL\n");
 		yycolumn = 1;
 	}
 \r {
-		printf("CR\n");
+		//printf("CR\n");
 	}
 {letter}({letter}|{digit})* {
-		printf("ID %s\n", yytext);
+		//printf("ID %s\n", yytext);
 		return ID;
 	}
 {digit}+{letter}+({letter}|{digit})* {

@@ -1,4 +1,5 @@
 %locations
+
 %{
     #include <stdio.h>
     #include "lex.yy.c"
@@ -34,13 +35,14 @@
 %token ID
 
 /* precedence and associativity of Operators */
+/* MINUS for one unit lost */
 %right ASSIGNOP
 %left OR
 %left AND
 %left RELOP
 %left PLUS MINUS
 %left STAR DIV
-%right NOT MINUS
+%right NOT
 %left LP RP LB RB DOT
 
 /* actions to conflicts between shift and reduce */
@@ -58,19 +60,14 @@ ExtDefList: ExtDef  ExtDefList
 ExtDef: Specifier   ExtDecList  SEMI
 		| 	Specifier   SEMI
 		|   Specifier   FunDec  CompSt
-        |   error   SEMI    { printf("%d Error type B: 变量缺少类型定义， 如直接a;\n", @1); }
-        |   error   FunDec  CompSt  { printf("%d Error type B: 函数缺少类型定义， 如直接a;\n", @1); }
-        |   Specifier   error   SEMI    { printf("%d Error type B: 缺少与类型相关的变量定义， 如直接int int;\n", @1); }
-        |   Specifier   error   CompSt  { printf("%d Error type B: 缺少与类型相关的函数名定义， 如直接int int;\n", @1); }
-        |   Specifier   ExtDecList  error   StrangeDef  { printf("%d Error type B: 分号缺失;\n", @2); }
-        |   Specifier   error   StrangeDef  { printf("%d Error type B: 分号缺失;\n", @1); }
-        |   Specifier   ExtDecList  error   SEMI    { printf("%d Error type B: 分号缺失;\n", @2); }
-        |   Specifier   error   SEMI    { printf("%d Error type B: 分号缺失;\n", @1); }
+		|   error   SEMI    { printf("Error type B at Line %d: Missing variable definition\n", @2); }
+        |   error   FunDec  CompSt  { printf("Error type B at Line %d: Missing function definition\n", @2); }
+        |   Specifier   ExtDecList  error   StrangeDef  { printf("Error type B at Line %d: Missing semicolon for global variable;\n", @2); }
+        |   Specifier   ExtDecList  error   SEMI    { printf("Error type B at Line %d: Missing semicolon for global variable;\n", @2); }
 		;
 
 ExtDecList: VarDec
 		|	VarDec  COMMA   ExtDecList
-        |   VarDec  error   ExtDecList  { printf("%d Error type B: 全局变量定义缺少‘，’，如a.b\n", @1); }
 		;
 
 Specifier:  TYPE
@@ -79,11 +76,8 @@ Specifier:  TYPE
 
 StructSpecifier:    STRUCT  OptTag  LC  DefList RC
 		|	STRUCT  Tag
-        |   STRUCT  error   LC  DefList RC  { printf("%d Error type B: 结构类型名非法\n", @1); }
-        |   STRUCT  OptTag  error   RC  { printf("%d Error type B: 结构体定义的左括号缺失\n", @2); }
-        |   STRUCT  OptTag  LC  DefList error   StrangeDef  { printf("%d Error type B: 结构体定义的右括号缺失\n", @4); }
-        |   STRUCT  OptTag  LC  DefList error   SEMI    { printf("%d Error type B: 结构体定义的右括号缺失\n", @4); }
-        |   STRUCT  error   SEMI    { printf("%d Error type B: 初始化新结构变量类型名非法\n", @1); }
+		|   STRUCT  error   LC  DefList RC  { printf("Error type B at Line %d: Illegal name for structure\n", @1); }
+        |   STRUCT  error   SEMI    { printf("Error type B at Line %d: Illegal name for structure definition\n", @1); }
 		;
 
 OptTag: ID
@@ -95,6 +89,9 @@ Tag:    ID
 
 VarDec:	ID
 		|	VarDec	LB	INT  RB
+        |   VarDec  LB  error   RB  { printf("Error type B at Line %d: Error for array subscript\n", @1); }
+        |   VarDec  LB  INT error   RB  { printf("Error type B at Line %d: Lost for ']'\n", @3); }
+        |   VarDec  LB  INT error   SEMI    { printf("Error type B at Line %d: Lost for ']'\n", @3); }
 		;
 
 FunDec:	ID  LP  VarList RP
@@ -103,9 +100,11 @@ FunDec:	ID  LP  VarList RP
 
 VarList:    ParamDec COMMA VarList
 		|	ParamDec
+		|	ParamDec	error	VarList	{ printf("Error type B at Line %d: Error for parameters of the function\n", @1); }
 		;
 
 ParamDec:   Specifier VarDec
+		|	error	VarDec	{ printf("Error type B at Line %d: Missing  type definitions of variables\n", @1); }
 		;
 
 CompSt: LC DefList StmtList RC
@@ -116,10 +115,16 @@ StmtList:   Stmt StmtList
 		;
 
 Stmt:   Exp SEMI
+		|	Exp	error	SEMI	{ printf("Error type B at Line %d: Missing semicolon for sentence\n", @1); }
+		|	Exp	error	RC	{ printf("Error type B at Line %d: Missing semicolon for sentence\n", @1); }
 		|	CompSt
 		|	RETURN Exp SEMI
+		|	RETURN Exp	error	SEMI	{ printf("Error type B at Line %d: Missing semicolon of 'return'\n", @2); }
+		|	RETURN Exp	error	{ printf("Error type B at Line %d: Missing semicolon of 'return'\n", @2); }
 		| 	IF  LP Exp RP Stmt  %prec LOWER_THAN_ELSE
-		|	IF  LP Exp RP Stmt ELSE Stmt
+		|	IF  LP Exp RP Stmt ELSE Stmt		
+		|	IF	LP Exp RP Stmt ELSE	error	SEMI	{ printf("Error type B at Line %d: Missing semicolon for sentence\n", @1); }
+		|	IF	LP Exp RP Stmt ELSE	error	RC	{ printf("Error type B at Line %d: Missing semicolon for sentence\n", @1); }
 		|	WHILE LP Exp RP Stmt
 		;		
 
@@ -128,6 +133,7 @@ DefList:    Def DefList
 		;
 
 Def:    Specifier DecList SEMI
+		|	Specifier DecList error	SEMI	{ printf("Error type B at Line %d: Missing semicolon for definitions of Local variables\n", @2); }
 		;
 
 DecList:    Dec
@@ -139,19 +145,29 @@ Dec:    VarDec
 		;
 
 Exp:    Exp ASSIGNOP    Exp
+	    |	Exp	ASSIGNOP	error	SEMI	{ printf("Error type B at Line %d: The number of operands is wrong;\n", @2); }
         |   Exp AND Exp
+	    |	Exp	AND	error	SEMI	{ printf("Error type B at Line %d: The number of operands is wrong;\n", @2); }
 		|	Exp OR  Exp
+		|	Exp	OR	error	SEMI	{ printf("Error type B at Line %d: The number of operands is wrong;\n", @2); }
 		|	Exp RELOP   Exp
+		|	Exp	RELOP	error	SEMI	{ printf("Error type B at Line %d: The number of operands is wrong;\n", @2); }
 		| 	Exp PLUS  	Exp
+		|	Exp	PLUS	error	SEMI	{ printf("Error type B at Line %d: The number of operands is wrong;\n", @2); }
 		|	Exp MINUS	Exp
+		|	Exp	MINUS	error	SEMI	{ printf("Error type B at Line %d: The number of operands is wrong;\n", @2); }
 		|	Exp	STAR 	Exp
+		|	Exp	STAR	error	SEMI	{ printf("Error type B at Line %d: The number of operands is wrong;\n", @2); }
 		| 	Exp DIV Exp
+		|	Exp	DIV	error	SEMI	{ printf("Error type B at Line %d: The number of operands is wrong;\n", @2); }
 		|	LP  Exp RP
 		|	MINUS   Exp
 		|	NOT Exp
 		|	ID  LP  Args    RP
 		|	ID  LP  RP
 		|	Exp LB  Exp RB
+		|	Exp	LB	Exp	error		RB	{ printf("Error type B at Line %d: Lost for ']'\n", @3); }
+		|	Exp	LB	Exp	error	SEMI	{ printf("Error type B at Line %d: Lost for ']'\n", @3); }
 		|	Exp DOT ID
 		|	ID
 		|	INT
