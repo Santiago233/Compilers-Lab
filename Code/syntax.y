@@ -3,6 +3,7 @@
 %{
     #include <stdio.h>
     #include "lex.yy.c"
+    int flag;
 %}
 
 /* declared tokens */
@@ -183,5 +184,6 @@ StrangeDef: FunDec  CompSt
 
 %%
 yyerror(char* msg){
-    fprintf(stderr, "error: %s\n", msg);
+	flag = 2;
+    //fprintf(stderr, "error: %s\n", msg);
 }

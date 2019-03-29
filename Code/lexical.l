@@ -5,6 +5,7 @@
 	#include <stdlib.h>
 	#include "syntax.tab.h"
 	int yycolumn = 1;
+	int flag;
 	#define YY_USER_ACTION \
 		yylloc.first_line = yylloc.last_line = yylineno; \
 		yylloc.first_column = yycolumn; \
@@ -30,9 +31,11 @@ letter [_a-zA-Z]
 		return INT;
     }
 0[xX][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]* {
+		flag = 1;
 		printf("Error type A at Line %d:Wrong Hexadecimal Number \'%s\'\n", yylineno, yytext);
 	}
 0[0-7]*[89]+[0-9]* {
+		flag = 1;
 		printf("Error type A at Line %d:Wrong Octal Number \'%s\'\n", yylineno, yytext);
 	}
 (([1-9]{digit}*)|0)"."{digit}+ {
@@ -40,6 +43,7 @@ letter [_a-zA-Z]
 		return FLOAT;
 	}
 0{digit}*"."{digit}* {
+		flag = 1;
 		printf("Error type A at Line %d:Wrong Float value \'%s\'\n", yylineno, yytext);
 	}
 ";" {
@@ -180,9 +184,11 @@ letter [_a-zA-Z]
 		return ID;
 	}
 {digit}+{letter}+({letter}|{digit})* {
+		flag = 1;
 		printf("Error type A at Line %d:Wrong ID \'%s\'\n", yylineno, yytext);
 	}
 . {
+		flag = 1;
 		printf("Error type A at Line %d:Mysterious characters \'%s\'\n", yylineno, yytext);
 	}
 
