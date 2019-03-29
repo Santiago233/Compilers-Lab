@@ -1,8 +1,18 @@
 #include <stdio.h>
+#include<string.h>
 #include "node.h"
+int flag = 0;
+int scount = 0;
+Node* stack[1024] = {NULL};
+Node* root = NULL;
+char* mystr[1024];
+int mystrc = 0;
 
 int main(int argc, char ** argv){
-    int i;
+int i;
+	extern struct Node* root ;
+	root = (struct Node*)malloc(sizeof(struct Node));
+    
     /*if (argc < 2){
         yylex();
         printf("Lexical analysis of one file completed!\n");
@@ -33,5 +43,16 @@ int main(int argc, char ** argv){
 	}
 	flag = 0;
     }
+	//printf("error is here %d\n",scount);
+	root->childnode = stack[1];
+	mystrc = 0;
+	//printf("%s  %d\n",stack[1]->childnode->rnode->name,stack[1]->childnode->rnode->line);
+	generate(root,1);
+
+	//printf("%s  %d\n",root->name,root->line);
+	//printf("%s  %d\n",root->childnode->name,root->childnode->line);
+	//for(i = 1;stack[i] != NULL;i++){
+	//	printf("%s  %d\n",stack[i]->name,stack[i]->line);
+	//}
     return 0;
 }
