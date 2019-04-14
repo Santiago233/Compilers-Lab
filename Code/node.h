@@ -138,7 +138,6 @@ static void generate(Node* root, int number){
 			printf(" (%d)\n", point1->line);
 			;
 		}
-			//judge whether end or not
 		if(point1->childnode != NULL){
 			Node* point2 = point1->childnode;
 			
