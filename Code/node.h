@@ -145,6 +145,7 @@ static void generate(Node* root, int number){
 			
 		}
 		point1 = point1->rnode;
+		//////
 	}
 	}
 		
