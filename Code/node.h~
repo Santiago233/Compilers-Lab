@@ -111,7 +111,7 @@ static struct Node* newNode_id (char* myname,char* val, int lineno)
 
 
 static void generate(Node* root, int number){
-		Node* point1 = root; 
+	Node* point1 = root; 
 //	if(point1->line != 0){
 		while(point1 != NULL){
 		if(point1->line != 0){

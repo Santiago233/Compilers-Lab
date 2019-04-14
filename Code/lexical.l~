@@ -288,12 +288,11 @@ letter [_a-zA-Z]
 		//printf("CR\n");
 	}
 {letter}({letter}|{digit})* {
-		Node* p = newNode_id("ID",yytext,yylineno);
+		Node* p = newNode_("ID",(YYSTYPE)yytext,yylineno);
 		mystr[mystrc++] = yytext;
 		scount++;
 		stack[scount] = p;
 		printf("ID %s\n ", yytext);
-		
 		return ID;
 	}
 {digit}+{letter}+({letter}|{digit})* {

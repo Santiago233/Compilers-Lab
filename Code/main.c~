@@ -45,6 +45,7 @@ int i;
     }
 	//printf("error is here %d\n",scount);
 	root->childnode = stack[1];
+	mystrc = 0;
 	//printf("%s  %d\n",stack[1]->childnode->rnode->name,stack[1]->childnode->rnode->line);
 	generate(root,1);
 
