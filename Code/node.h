@@ -111,47 +111,36 @@ static struct Node* newNode_id (char* myname,char* val, int lineno)
 
 
 static void generate(Node* root, int number){
-		Node* point1 = root; 
-//	if(point1->line != 0){
-		while(point1 != NULL){
-		if(point1->line != 0){
-		
-		
-		int i;
-		for(i = 1; i <= number; i=i+1){
-			printf(" ");
-		} 
-		char* temp;
-		temp = point1->name;
-		printf("%s", point1->name);
-		int pflag = 0;
-		if(!strcmp(temp,"ID")){
-			//printf("\n");
-			printf(": %s\n",point1->val2);
-		}else if(!strcmp(temp,"INT")){
-			printf(": %d\n", *(int*)&point1->val);pflag = 1;
-		}else if(!strcmp(temp,"FLOAT")){
-			printf(": %f\n", *(float*)&point1->val);pflag = 1;
-		}else if(!strcmp(temp,"TYPE: INT")||!strcmp(temp,"TYPE: FLOAT")){
-			printf("\n");pflag = 1;
-		}else{
-			printf(" (%d)\n", point1->line);
-			;
-		}
-		if(point1->childnode != NULL){
-			Node* point2 = point1->childnode;
-			
-			generate(point2, number + 2);
-			
-		}
-		point1 = point1->rnode;
-		//////
+	Node* point1 = root; 
+	while(point1 != NULL && point1->line != 0){
+		//if(point1->line != 0){
+			int i;
+			for(i = 1; i <= number; i=i+1){
+				printf(" ");
+			} 
+			char* temp;
+			temp = point1->name;
+			printf("%s", point1->name);
+			//int pflag = 0;
+			if(!strcmp(temp,"ID")){
+				//printf("\n");
+				printf(": %s\n",point1->val2);
+			}else if(!strcmp(temp,"INT")){
+				printf(": %d\n", *(int*)&point1->val);//pflag = 1;
+			}else if(!strcmp(temp,"FLOAT")){
+				printf(": %f\n", *(float*)&point1->val);//pflag = 1;
+			}else if(!strcmp(temp,"TYPE: INT")||!strcmp(temp,"TYPE: FLOAT")){
+				printf("\n");//pflag = 1;
+			}else{
+				printf(" (%d)\n", point1->line);
+			}
+			if(point1->childnode != NULL){
+				Node* point2 = point1->childnode;
+				generate(point2, number + 2);
+			}
+			point1 = point1->rnode;
+		//}
 	}
-	}
-		
-
-		
-//	}
 
 /*	if(root->line != 0){
 		int i;

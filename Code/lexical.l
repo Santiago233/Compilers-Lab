@@ -9,9 +9,11 @@
 	char* mystr[1024];
 	int mystrc;
 	int scount;
+	int lineflag;
 	Node* stact[1024];
 	int yycolumn = 1;
 	#define YY_USER_ACTION \
+		if(lineflag){yylineno = 1;lineflag = 0;}\
 		yylloc.first_line = yylloc.last_line = yylineno; \
 		yylloc.first_column = yycolumn; \
 		yylloc.last_column = yycolumn + yyleng - 1; \
@@ -55,8 +57,9 @@ letter [_a-zA-Z]
 	}
 (([1-9]{digit}*)|0)"."{digit}+ {
 		//printf("Float value %f\n", atof(yytext));
-		Node* p = newNode_("FLOAT",(YYSTYPE)atof(yytext),yylineno);
+		Node* p = newNode_("FLOAT",(YYSTYPE)(float)atof(yytext),yylineno);
 		scount++;
+		//printf("%f\n",*(float*)&p->val);
 		stack[scount] = p;
 		return FLOAT;
 	}
@@ -264,14 +267,14 @@ letter [_a-zA-Z]
 		Node* p = newNode("RC",yylineno);
 		scount++;
 		stack[scount] = p;
-		printf("ELSE\n");
+		//printf("ELSE\n");
 		return ELSE;
 	}
 "while" {
 		Node* p = newNode("RC",yylineno);
 		scount++;
 		stack[scount] = p;
-		printf("WHILE\n");
+		//printf("WHILE\n");
 		return WHILE;
 	}
 " " {
@@ -292,7 +295,7 @@ letter [_a-zA-Z]
 		mystr[mystrc++] = yytext;
 		scount++;
 		stack[scount] = p;
-		printf("ID %s\n ", yytext);
+		//printf("ID %s\n ", yytext);
 		
 		return ID;
 	}

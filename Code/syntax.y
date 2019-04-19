@@ -6,9 +6,16 @@
     int flag;
 %}
 
+%union{
+	int type_int;
+	float type_float;
+	double type_double;
+	char* type_string;
+}
+
 /* declared tokens */
-%token INT
-%token FLOAT
+%token <type_int> INT
+%token <type_float> FLOAT
 %token SEMI
 %token COMMA
 %token ASSIGNOP
@@ -55,7 +62,7 @@ Program:   ExtDefList{strncpy(root->name,"pragram",20);root->line = 1;root->chil
 		;
 
 ExtDefList: ExtDef  ExtDefList	{Node* p = newNode("ExtDefList",*(int*)&@1);insert(2,p); }
-		|   {Node* pp = newNode_("NULL",0,0);scount++;stact[scount] = pp;}/* empty */  {Node* p = newNode("ExtDefList",0);insert(1,p);}
+		|   {Node* pp = newNode_("NULL",(YYSTYPE)0,0);scount++;stact[scount] = pp;}/* empty */  {Node* p = newNode("ExtDefList",0);insert(1,p);}
 		;
 
 ExtDef: Specifier   ExtDecList  SEMI {Node* p = newNode("ExtDef",*(int*)&@1);insert(3,p); }
@@ -82,7 +89,7 @@ StructSpecifier:    STRUCT  OptTag  LC  DefList RC  {Node* p = newNode("StrcutSp
 		;
 
 OptTag: ID{Node* p = newNode("OptTag",*(int*)&@1);insert(1,p); }
-		|{Node* pp = newNode_("NULL",0,0);scount++;stact[scount] = pp;}{Node* p = newNode("OptTag",0);insert(1,p);}
+		|{Node* pp = newNode_("NULL",(YYSTYPE)0,0);scount++;stact[scount] = pp;}{Node* p = newNode("OptTag",0);insert(1,p);}
 	    ;
 
 Tag:    ID{Node* p = newNode("Tag",*(int*)&@1);insert(1,p); }
@@ -112,7 +119,7 @@ CompSt: LC DefList StmtList RC{Node* p = newNode("CompSt",*(int*)&@1);insert(4,p
 		;
 
 StmtList:   Stmt StmtList{Node* p = newNode("StmtList",*(int*)&@1);insert(2,p); }
-		|{Node* pp = newNode_("NULL",0,0);scount++;stact[scount] = pp;}{Node* p = newNode("StmtList",0);insert(1,p);}
+		|{Node* pp = newNode_("NULL",(YYSTYPE)0,0);scount++;stact[scount] = pp;}{Node* p = newNode("StmtList",0);insert(1,p);}
 		;
 
 Stmt:   Exp SEMI{Node* p = newNode("Stmt",*(int*)&@1);insert(2,p); }
@@ -130,7 +137,7 @@ Stmt:   Exp SEMI{Node* p = newNode("Stmt",*(int*)&@1);insert(2,p); }
 		;		
 
 DefList:    Def DefList{Node* p = newNode("DefList",*(int*)&@1);insert(2,p); }
-		|{Node* pp = newNode_("NULL",0,0);scount++;stact[scount] = pp;}{Node* p = newNode("DefList",0);insert(1,p);}
+		|{Node* pp = newNode_("NULL",(YYSTYPE)0,0);scount++;stact[scount] = pp;}{Node* p = newNode("DefList",0);insert(1,p);}
 		;
 
 Def:    Specifier DecList SEMI{Node* p = newNode("Def",*(int*)&@1);insert(3,p); }
