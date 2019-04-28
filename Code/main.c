@@ -56,9 +56,9 @@ int i;
 		
 		generate(root,0);
 		//printf("error there\n");
-		Arraygenerate(root,0);
+		/*Arraygenerate(root,0);
 		printf("asdasda\n");		
-		lineflag = 1;
+		lineflag = 1;*/
 		Treefather(root); 
 		//printf("%s\n",MyArrayList[97]->name);
 	
@@ -67,10 +67,9 @@ int i;
 	
 		AllInsert(MyVarList, MyFuncList, 0, root);	//0 for the loss of array
 		AllInsert_(MyVarList, MyFuncList, 0, root);
-		printf("23333\n");
 		AllCheck(MyVarList, MyFuncList, 0, root);
 		AllSetpflag(root);
-		
+		FuncCheckRe(root);
 	}
 	flag = 0;
 	int j;
