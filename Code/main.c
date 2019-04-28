@@ -7,7 +7,9 @@ int scount = 0;
 Node* stack[1024] = {NULL};
 Node* root = NULL;
 char* mystr[1024];
-myArray* Arraylist[1024] = {NULL};
+myArray* MyArrayList[N] = {NULL};
+VarList MyVarList[N] = {NULL};	//print for check name
+FuncList MyFuncList[N] = {NULL};
 int mystrc = 0;
 int lineflag = 0;
 struct Type_ TYPE_MYINT = {
@@ -53,19 +55,21 @@ int i;
 		//root->childnode = stack[0];
 		
 		generate(root,0);
-		printf("%s %d\n",root->childnode->childnode->rnode->childnode->childnode->rnode->rnode->childnode->rnode->rnode->rnode->name,root->childnode->childnode->rnode->childnode->childnode->rnode->rnode->childnode->rnode->rnode->rnode->line);
+		//printf("error there\n");
 		Arraygenerate(root,0);
-		printf("%d\n",Arraylist[0]->mytype->kind);		
+		printf("asdasda\n");		
 		lineflag = 1;
 		Treefather(root); 
-		
+		//printf("%s\n",MyArrayList[97]->name);
 	
-		VarList MyVarList[N];	//print for check name
-		FuncList MyFuncList[N];
+		
 		//define the structure of array
 	
 		AllInsert(MyVarList, MyFuncList, 0, root);	//0 for the loss of array
-		printf("error there\n");
+		AllInsert_(MyVarList, MyFuncList, 0, root);
+		printf("23333\n");
+		AllCheck(MyVarList, MyFuncList, 0, root);
+		AllSetpflag(root);
 		
 	}
 	flag = 0;

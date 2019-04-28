@@ -192,7 +192,7 @@ letter [_a-zA-Z]
 		return RC;
 	}
 "int" {		
-		Node* p = newNode_id("TYPE","int",yylineno);
+		Node* p = newNode("TYPE: INT",yylineno);
 		yylval = (YYSTYPE)p;
 		return TYPE;
 		//YYSTYPE F = (YYSTYPE)yytext;
@@ -200,7 +200,7 @@ letter [_a-zA-Z]
 		
 	}
 "float" {
-		Node* p = newNode_id("TYPE","float",yylineno);
+		Node* p = newNode("TYPE: FLOAT",yylineno);
 		yylval = (YYSTYPE)p;
 		return TYPE;
 		
