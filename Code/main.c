@@ -1,13 +1,22 @@
 #include <stdio.h>
 #include<string.h>
 #include "node.h"
+#define N 0x3fff
 int flag = 0;
 int scount = 0;
 Node* stack[1024] = {NULL};
 Node* root = NULL;
 char* mystr[1024];
+myArray* Arraylist[1024] = {NULL};
 int mystrc = 0;
 int lineflag = 0;
+struct Type_ TYPE_MYINT = {
+	BASIC , 1
+};
+
+struct Type_ TYPE_MYFLOAT = {
+	BASIC , 2
+};
 int main(int argc, char ** argv){
 int i;
     
@@ -40,11 +49,24 @@ int i;
 	}else{
 		//printf("%d\n",flag);
 		printf("Lexical analysis and Gramma analysis of one file compelted!\n");
-		//printf("error is here %d\n",scount);
-		root->childnode = stack[1];
-		//printf("%s  %d\n",stack[1]->childnode->rnode->name,stack[1]->childnode->rnode->line);
+		
+		//root->childnode = stack[0];
+		
 		generate(root,0);
+		printf("%s %d\n",root->childnode->childnode->rnode->childnode->childnode->rnode->rnode->childnode->rnode->rnode->rnode->name,root->childnode->childnode->rnode->childnode->childnode->rnode->rnode->childnode->rnode->rnode->rnode->line);
+		Arraygenerate(root,0);
+		printf("%d\n",Arraylist[0]->mytype->kind);		
 		lineflag = 1;
+		Treefather(root); 
+		
+	
+		VarList MyVarList[N];	//print for check name
+		FuncList MyFuncList[N];
+		//define the structure of array
+	
+		AllInsert(MyVarList, MyFuncList, 0, root);	//0 for the loss of array
+		printf("error there\n");
+		
 	}
 	flag = 0;
 	int j;
@@ -56,10 +78,7 @@ int i;
 	scount = 0;
 	//printf("%d\n",i);
     }
-	//printf("%s  %d\n",root->name,root->line);
-	//printf("%s  %d\n",root->childnode->name,root->childnode->line);
-	//for(i = 1;stack[i] != NULL;i++){
-	//	printf("%s  %d\n",stack[i]->name,stack[i]->line);
-	//}
+	
+	
     return 0;
 }

@@ -27,26 +27,25 @@ letter [_a-zA-Z]
 		//printf("INT_10, decimal integer value %d\n", atoi(yytext));
 		//printf("%s\n",yytext);
 		Node* p = newNode_("INT",(YYSTYPE)atoi(yytext),yylineno);
-		scount++;
-		//printf("%s\n",p->name);
-		stack[scount] = p;
+		YYSTYPE F = (YYSTYPE)p;
+		yylval = F;
 		return INT;
 	}
 0[xX][0-9a-fA-F]+ {
         int int_yytext = _16to10(yytext);
         //printf("INT_16, hexadecimal integer value %d\n", int_yytext);
 	Node* p = newNode_("INT",(YYSTYPE)int_yytext,yylineno);
-		scount++;
-		stack[scount] = p;
+		YYSTYPE F = (YYSTYPE)p;
+		yylval = F;
 
 		return INT;
     }
 0[0-7]+ {
-        int int_yytext = _8to10(yytext);
+        	int int_yytext = _8to10(yytext);
         //printf("INT_8, octal integer value %d\n", int_yytext);
-	Node* p = newNode_("INT",(YYSTYPE)int_yytext,yylineno);
-		scount++;
-		stack[scount] = p;
+		Node* p = newNode_("INT",(YYSTYPE)int_yytext,yylineno);
+		YYSTYPE F = (YYSTYPE)p;
+		yylval = F;
 		return INT;
     }
 0[xX][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]* {
@@ -58,223 +57,177 @@ letter [_a-zA-Z]
 (([1-9]{digit}*)|0)"."{digit}+ {
 		//printf("Float value %f\n", atof(yytext));
 		Node* p = newNode_("FLOAT",(YYSTYPE)(float)atof(yytext),yylineno);
-		scount++;
-		//printf("%f\n",*(float*)&p->val);
-		stack[scount] = p;
+		YYSTYPE F = (YYSTYPE)p;
+		yylval = F;
 		return FLOAT;
 	}
 0{digit}*"."{digit}* {
 		printf("Error type A at Line %d:Wrong Float value \'%s\'\n", yylineno, yytext);
 	}
 ";" {
-		//printf();
 		Node* p = newNode("SEMI",yylineno);
-		scount++;
-		stack[scount] = p;
+		
+		yylval = (YYSTYPE)p;
 		return SEMI;
 	}
 "," {
 		//printf("COMMA\n");
 		Node* p = newNode("COMMA",yylineno);
-		scount++;
-		stack[scount] = p;
+		yylval = (YYSTYPE)p;
 		return COMMA;
 	}
 "=" {
 		//printf("ASSIGNOP\n");
 		Node* p = newNode("ASSIGNOP",yylineno);
-		scount++;
-		stack[scount] = p;
+		yylval = (YYSTYPE)p;
 		return ASSIGNOP;
 	}
 ">" {
 		//printf("RELOP_DAYU\n");
-		Node* p = newNode("RELOP",yylineno);
-		scount++;
-		stack[scount] = p;
+		Node* p = newNode("RELOP_DAYU",yylineno);
+		yylval = (YYSTYPE)p;
 		return RELOP;
 	}
 "<" {
 		//printf("RELOP_XIAOYU\n");
-		Node* p = newNode("LELOP_XIAOYU",yylineno);
-		scount++;
-		stack[scount] = p;
+		Node* p = newNode("RELOP_XIAOYU",yylineno);
+		yylval = (YYSTYPE)p;
 		return RELOP;
 	}
 ">=" {
 		//printf("RELOP_DAYUDENGYU\n");
 		Node* p = newNode("RELOP_DAYUDENGYU",yylineno);
-		scount++;
-		stack[scount] = p;
+		yylval = (YYSTYPE)p;
 		return RELOP;
 	}
 "<=" {
 		//printf("RELOP_XIAOYUDENGYU\n");
 		Node* p = newNode("RELOP_XIAOYUDENGYU",yylineno);
-		scount++;
-		stack[scount] = p;
+		yylval = (YYSTYPE)p;
 		return RELOP;
 	}
 "==" {
 		Node* p = newNode("RELOP_LIANDENG",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("RELOP_LIANDENG\n");
+		yylval = (YYSTYPE)p;
 		return RELOP;
 	}
 "!=" {
 		//printf("RELOP_BUDENGYU\n");
 		Node* p = newNode("RELOP_BUDENGYU",yylineno);
-		scount++;
-		stack[scount] = p;
+		yylval = (YYSTYPE)p;
 		return RELOP;
 	}
 "+" {
+		
 		Node* p = newNode("PLUS",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("PLUS\n");
+		yylval = (YYSTYPE)p;
 		
 		return PLUS;
 	}
 "-" {
+
 		Node* p = newNode("MINUS",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("MINUS\n");
+		yylval = (YYSTYPE)p;
 		return MINUS;
 	}
 "*" {
 		Node* p = newNode("STAR",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("STAR\n");
+		yylval = (YYSTYPE)p;
 		return STAR;
 	}
 "/" {
 		Node* p = newNode("DIV",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("DIV\n");
+		yylval = (YYSTYPE)p;
 		return DIV;
 	}
 "&&" {
 		Node* p = newNode("AND",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("AND\n");
+		yylval = (YYSTYPE)p;
 		return AND;
 	}
 "||" {
 		Node* p = newNode("OR",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("OR\n");
+		yylval = (YYSTYPE)p;
 		return OR;
 	}
 "." {
 		Node* p = newNode("DOT",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("DOT\n");
+		yylval = (YYSTYPE)p;
 		return DOT;
 	}
 "!" {
 		Node* p = newNode("NOT",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("NOT\n");
+		yylval = (YYSTYPE)p;
 		return NOT;
 	}
 "(" {
 		Node* p = newNode("LP",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("LP\n");
+		yylval = (YYSTYPE)p;
+
 		return LP;
 	}
 ")" {
 		Node* p = newNode("RP",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("RP\n");
+		yylval = (YYSTYPE)p;
 		return RP;
 	}
 "[" {
 		Node* p = newNode("LB",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("LB\n");
+		yylval = (YYSTYPE)p;
 		return LB;
 	}
 "]" {
 		Node* p = newNode("RB",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("RB\n");
+		yylval = (YYSTYPE)p;
 		return RB;
 	}
 "{" {
 		Node* p = newNode("LC",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("LC\n");
+		yylval = (YYSTYPE)p;
 		return LC;
 	}
 "}" {
 		Node* p = newNode("RC",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("RC\n");
+		yylval = (YYSTYPE)p;
 		return RC;
 	}
-"int" {
-		Node* p = newNode_("TYPE: INT",(YYSTYPE)"int",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("TYPE_INT\n");
+"int" {		
+		Node* p = newNode_id("TYPE","int",yylineno);
+		yylval = (YYSTYPE)p;
 		return TYPE;
+		//YYSTYPE F = (YYSTYPE)yytext;
+		//printf("%s\n",*(char**)&F);
+		
 	}
 "float" {
-		Node* p = newNode_("TYPE: FLOAT",(YYSTYPE)"float",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("TYPE_FLOAT\n");
+		Node* p = newNode_id("TYPE","float",yylineno);
+		yylval = (YYSTYPE)p;
 		return TYPE;
+		
 	}
 "struct" {
 		Node* p = newNode("STRUCT",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("STRCUT\n");
+		yylval = (YYSTYPE)p;
 		return STRUCT;
 	}
 "return" {
 		Node* p = newNode("RETURN",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("RETURN\n");
+		yylval = (YYSTYPE)p;
 		return RETURN;
 	}
 "if" {
 		Node* p = newNode("IF",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("IF\n");
+		yylval = (YYSTYPE)p;
 		return IF;
 	}
 "else" {
-		Node* p = newNode("RC",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("ELSE\n");
+		Node* p = newNode("ELSE",yylineno);
+		yylval = (YYSTYPE)p;
 		return ELSE;
 	}
 "while" {
-		Node* p = newNode("RC",yylineno);
-		scount++;
-		stack[scount] = p;
-		//printf("WHILE\n");
+		Node* p = newNode("WHILE",yylineno);
+		yylval = (YYSTYPE)p;
 		return WHILE;
 	}
 " " {
@@ -291,12 +244,17 @@ letter [_a-zA-Z]
 		//printf("CR\n");
 	}
 {letter}({letter}|{digit})* {
-		Node* p = newNode_id("ID",yytext,yylineno);
-		mystr[mystrc++] = yytext;
-		scount++;
-		stack[scount] = p;
-		//printf("ID %s\n ", yytext);
 		
+		//scount++;
+		//stack[scount] = p;
+		//name_d = new char[20];
+		char *name_d = yytext;
+		
+		
+		Node* p = newNode_id("ID",name_d,yylineno);
+		YYSTYPE F = (YYSTYPE)p;
+		yylval = F;
+		//printf("%s\n",*(char**)&(*(Node**)&yylval)->val);
 		return ID;
 	}
 {digit}+{letter}+({letter}|{digit})* {
