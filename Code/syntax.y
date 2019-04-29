@@ -87,13 +87,13 @@ Specifier:  TYPE      {add_node($1);Node* p = newNode("Specifier",*(int*)&@1); $
 		|	StructSpecifier  {add_node($1);Node* p = newNode("Specifier",*(int*)&@1); $$ = p;insert(p,1);}
 		;
 
-StructSpecifier:    STRUCT  OptTag  LC DefList RC  {add_node($1);add_node($2);add_node($3);add_node($4);Node* p = newNode("StrcutSpecifier",*(int*)&@1); $$ = p;insert(p,4);}
+StructSpecifier:    STRUCT  OptTag  LC DefList RC  {add_node($1);add_node($2);add_node($3);add_node($4);add_node($5);Node* p = newNode("StrcutSpecifier",*(int*)&@1); $$ = p;insert(p,5);}
 		|	STRUCT  Tag	{add_node($1);add_node($2);Node* p = newNode("StructSpecifier",*(int*)&@1);$$ = p;insert(p,2); }
 		|   STRUCT  error   LC  DefList RC  { printf("Error type B at Line %d: Illegal name for structure\n", @1); }
         |   STRUCT  error   SEMI    { printf("Error type B at Line %d: Illegal name for structure definition\n", @1); }
 		;
 
-OptTag: ID{add_node($1);Node* p = newNode("OptTag",*(int*)&@1);$$ = p;insert(p,1); $$ = p;insert(p,1);}
+OptTag: ID{add_node($1);Node* p = newNode("OptTag",*(int*)&@1);$$ = p;$$ = p;insert(p,1);}
 		|{Node* p = newNode_id("OptTag","NULL",N);$$ = p;}
 	    ;
 

@@ -10,6 +10,7 @@ char* mystr[1024];
 myArray* MyArrayList[N] = {NULL};
 VarList MyVarList[N] = {NULL};	//print for check name
 FuncList MyFuncList[N] = {NULL};
+myStruct* MyStructList[N] = {NULL};
 int mystrc = 0;
 int lineflag = 0;
 struct Type_ TYPE_MYINT = {
@@ -54,19 +55,20 @@ int i;
 		
 		//root->childnode = stack[0];
 		
-		generate(root,0);
-		//printf("error there\n");
-		/*Arraygenerate(root,0);
-		printf("asdasda\n");		
-		lineflag = 1;*/
+		//generate(root,0);
+		
 		Treefather(root); 
+		//Arraygenerate(root,0);	
+		lineflag = 1;
 		//printf("%s\n",MyArrayList[97]->name);
 	
 		
 		//define the structure of array
 	
-		AllInsert(MyVarList, MyFuncList, 0, root);	//0 for the loss of array
+		AllInsert(MyVarList, MyFuncList, 0, root);//printf("error there\n");	//0 for the loss of array
 		AllInsert_(MyVarList, MyFuncList, 0, root);
+
+		//Structgenerate(root,0);
 		AllCheck(MyVarList, MyFuncList, 0, root);
 		AllSetpflag(root);
 		FuncCheckRe(root);
