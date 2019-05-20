@@ -53,7 +53,13 @@ typedef struct myStruct
 	Type mytype;
 	char* name;
 	/* data */
+	struct Structname* list;
 }myStruct;
+
+typedef struct Structname{
+	char* name;
+	struct Structname* next;
+}Structname;
 
 typedef struct VarList{
 	char* name;
@@ -131,10 +137,10 @@ static void add_node(struct Node* p)
 	//Node* tree = *(Node**)&p;
 	//printf("%d  %s\n",p->line,p->name);
 	stack[scount++] = p;
-}	
+}
+
 static void insert(Node* p, int num)
-{   
-	
+{
 		int i;
 		scount--;
 		for(i = 0; i< num-1;i++){
@@ -145,8 +151,7 @@ static void insert(Node* p, int num)
 		//printf("%s\n",p->name);
 		p->childnode = stack[scount];	
 		//printf("%s\n",p->name);
-		stack[scount] = p;	
-	
+		stack[scount] = p;
 }
 
 static struct Node* newNode (char* myname,int lineno)
@@ -173,11 +178,8 @@ static struct Node* newNode (char* myname,int lineno)
     		return p;
 }
 
-
-
-
 static struct Node* newNode_ (char* myname,YYSTYPE myval, int lineno)
-	{
+{
 		//printf("Error is not here.\n");
 		struct Node *p=(struct Node*)malloc(sizeof(struct Node));
 		
@@ -198,9 +200,8 @@ static struct Node* newNode_ (char* myname,YYSTYPE myval, int lineno)
     		return p;
 }
 
-
 static struct Node* newNode_id (char* myname,char* val, int lineno)
-	{
+{
 		//printf("Error is not here.\n");
 		struct Node *p=(struct Node*)malloc(sizeof(struct Node));
 		
@@ -220,7 +221,6 @@ static struct Node* newNode_id (char* myname,char* val, int lineno)
 		//stack[scount] = p;
     		return p;
 }
-
 
 static void generate(Node* root, int number){
 	Node* point1 = root; 
@@ -259,8 +259,6 @@ static void generate(Node* root, int number){
 			
 			
 	}
-
-
 }
 
 static void Structgenerate(Node* root, int number) {
@@ -268,10 +266,12 @@ static void Structgenerate(Node* root, int number) {
 	while(point1 != NULL && point1->line != 0){
 		if(point1->line == N)return;
 		char* temp;
-		temp = point1->name;int line = point1->line;
+		temp = point1->name;
+		int line = point1->line;
 		int i = 0;
 		int a;
-		if (!strcmp(temp, "STRUCT") && !strcmp(point1->rnode->name,"OptTag") ){
+		//printf("%s, %s\n", temp, point1->rnode->name);
+		if (!strcmp(temp, "STRUCT") && !strcmp(point1->rnode->name,"OptTag")){
 			Node* tempp = point1->rnode;
 			if(tempp->line != N){
 				temp = tempp->childnode->val2;}
@@ -284,7 +284,8 @@ static void Structgenerate(Node* root, int number) {
 			head->mytype->u.structure = NULL;
 			head->mytype->kind = STRUCTURE;
 			//head->structure = NULL;
-			head->name = temp;;
+			head->name = temp;
+			head->list = (struct Structname*)malloc(sizeof(struct Structname));
 			//printf("%s\n",head->name);
 			//printf("%s\n",temp);
 			point1 = point1->rnode->rnode->rnode;
@@ -297,181 +298,269 @@ static void Structgenerate(Node* root, int number) {
 				if(!strcmp(nametemp->childnode->name,"ID"))
 				{
 					char* sname = nametemp->childnode->val2;
+					//printf("%s\n", sname);
 					//temp = sname;
 					int sval = hash_pjw(sname);
+					//printf("%s\n", MyVarList[sval].name);
 					
 					if(!strcmp(MyVarList[sval].name,sname)){
+						//printf("123333\n");
 						FieldList head2 = (FieldList)malloc(sizeof(struct FieldList_));
 						head2->tail = NULL;
-						head2->name =  sname;
+						head2->name = sname;
+						head2->type = &MyVarList[sval].type;
 						pppp = head2;
 					}
 					else{
 						int val_ = (sval + 1) % N;
-								while(val_ != sval){
-									if(!strcmp(MyVarList[sval].name , sname)){
-										FieldList head2 = (FieldList)malloc(sizeof(struct FieldList_));
-										pppp->tail = head2;
-										pppp->tail->name = sname;
-										pppp->tail->type = &MyVarList[sval].type;
-										pppp->tail = NULL;	
-									}
-									val_ = (val_+ 1) % N;
-								}
+						while(val_ != sval){
+							if(!strcmp(MyVarList[sval].name , sname)){
+								FieldList head2 = (FieldList)malloc(sizeof(struct FieldList_));
+								head2->name = sname;
+								head2->type = &MyVarList[sval].type;
+								head2->tail = NULL;	
+								pppp = head2;
+							}
+							val_ = (val_+ 1) % N;
+						}
 					}
 						
 				}
 				else{
 					Node* lop = nametemp;
-					while(!strcmp(lop->name,"Vardec")){
+					while(!strcmp(lop->name,"VarDec")){
 						lop = lop->childnode;			
 					}
 					char* sname = lop->val2;
+					//printf("%s\n", sname);
 					//temp = sname;
 					int sval = hash_pjw(sname);
-					if(!strcmp(MyStructList[sval]->name , sname)){
-						pppp->tail->name = sname;
-						pppp->tail->type = &MyVarList[sval].type;
+					if(MyArrayList[sval] != NULL && !strcmp(MyArrayList[sval]->name , sname)){
+						//printf("id:1\n");
+						FieldList head2 = (FieldList)malloc(sizeof(struct FieldList_));
+						head2->name = sname;
+						head2->type = MyArrayList[sval]->mytype;
+						head2->tail = NULL;
+						pppp = head2;
 					}
 					else{
 						int val_ = (sval + 1) % N;
-								while(val_ != sval){
-									if(!strcmp(MyArrayList[sval]->name , sname)){
-										pppp->tail->name = sname;
-										pppp->tail->type = &MyVarList[sval].type;	
-									}
-									val_ = (val_+ 1) % N;
-								}
+						while(val_ != sval){
+							if(MyArrayList[sval] != NULL && !strcmp(MyArrayList[sval]->name , sname)){
+								//printf("id:2\n");
+								FieldList head2 = (FieldList)malloc(sizeof(struct FieldList_));
+								head2->name = sname;
+								head2->type = MyArrayList[sval]->mytype;
+								head2->tail = NULL;
+								pppp = head2;	
+							}
+							val_ = (val_+ 1) % N;
+						}
 					}
 				};
 				point1 = point1->childnode->rnode;
 			}
-			
-			
+
 			if (1) {
+				//printf("%s\n", temp);
 				//int line = point1->line;
-				int val = hash_pjw(temp);//hashnode
-				//printf("%s %d\n",head->name,val);
-					if(MyArrayList[val] == NULL){
-						if(MyVarList[val].name != NULL){
-							if(!strcmp(MyVarList[val].name , temp)){printf("Error type 16 at Line %d: Duplicated name \"%s\"\n", line, temp); 
-								return;}
-						}
-						if(MyFuncList[val].name != NULL){
-							if(!strcmp(MyFuncList[val].name , temp))
-								{printf("Error type 16 at Line %d: Duplicated name \"%s\"\n", line, temp); 
-								return;}
-						}
-						if(MyArrayList[val] != NULL){
-							if(!strcmp(MyArrayList[val]->name,temp)){
-							//printf("%s %s\n",name,MyArrayList[val]->name);
-								printf("Error type 16 at Line %d: Duplicated name \"%s\"\n", line, temp); 
-								return;
-							}
-						}
+				int val = hash_pjw(temp);	//hashnode
+				if(MyVarList[val].name != NULL){
+					if(!strcmp(MyVarList[val].name , temp)){
+						printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, temp); 
+						return;
 					}
-					else
-					{
-						
-						if(MyVarList[val].name != NULL){
-							if(!strcmp(MyVarList[val].name , temp)){printf("Error type 16 at Line %d: Duplicated name \"%s\"\n", line,temp); 
-								return;}
-						}
-						if(MyFuncList[val].name != NULL){
-							if(!strcmp(MyFuncList[val].name , temp))
-								{printf("Error type 16 at Line %d: Duplicated name \"%s\"\n", line, temp); 
-								return;}
-						}
-						if(MyArrayList[val] != NULL){
-							if(!strcmp(MyArrayList[val]->name,temp)){
-							//printf("%s %s\n",name,MyArrayList[val]->name);
-								printf("Error type 16 at Line %d: Duplicated name \"%s\"\n", line, temp); 
-								return;
-							}
-						}
-							if(!strcmp(MyStructList[val]->name,temp)){
-							//printf("%s %s\n",name,MyArrayList[val]->name);
-								printf("Error type 16 at Line %d: Duplicated name  \"%s\"\n", line, temp); 
-								return;
-							}
-							else{
-								int val_ = (val + 1) % N;
-								while(val_ != val){
-									if(MyVarList[val].name != NULL){
-										if(!strcmp(MyVarList[val].name , temp))
-											{printf("Error type 16 at Line %d: Duplicated name  \"%s\"\n",line,  temp); 
-											return;}
-									}
-									if(MyFuncList[val].name != NULL){
-										if(!strcmp(MyFuncList[val].name , temp))
-											{printf("Error type 16 at Line %d: Redefined struct \"%s\"\n", line, temp); 
-											return;}
-									}
-									if(MyArrayList[val] != NULL){
-										if(!strcmp(MyArrayList[val]->name,temp)){
-										//printf("%s %s\n",name,MyArrayList[val]->name);
-											printf("Error type 16 at Line %d: Redefined struct \"%s\"\n", line, temp); 
-										return;
-										}
-									}
-									if(!strcmp(MyStructList[val]->name,temp)){
-										printf("Error type 16 at Line %d: Duplicated name  \"%s\"\n",line,  temp);
-										return;
-									}
-									val_ = (val + 1) % N;
-								}
-							}
-							printf("Error: No Space for new variable!\n");
+				}
+				if(MyFuncList[val].name != NULL){
+					if(!strcmp(MyFuncList[val].name , temp)){
+						printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, temp);
+						return;
+					}
+				}
+				if(MyArrayList[val] != NULL){
+					if(!strcmp(MyArrayList[val]->name, temp)){
+						//printf("%s %s\n",name,MyArrayList[val]->name);
+						printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, temp);
+						return;
+					}
+				}
+				/*if(MyStructList[val] != NULL){
+					if(!strcmp(MyStructList[val]->name,temp)){
+						//printf("%s %s\n",name,MyArrayList[val]->name);
+						printf("Error type 16 at Line %d: Duplicated name  \"%s\"\n", line, temp); 
+						return;
+					}
+				}*/
+
+				//printf("%s %d\n",head->name,val);
+				int val_ = (val + 1) % N;
+				while(val_ != val){
+					if(MyVarList[val_].name != NULL){
+						if(!strcmp(MyVarList[val_].name , temp)){
+							printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, temp); 
 							return;
 						}
 					}
+					if(MyFuncList[val_].name != NULL){
+						if(!strcmp(MyFuncList[val_].name , temp)){
+							printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, temp);
+							return;
+						}
+					}
+					if(MyArrayList[val_] != NULL){
+						if(!strcmp(MyArrayList[val_]->name, temp)){
+							//printf("%s %s\n",name,MyArrayList[val]->name);
+							printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, temp);
+							return;
+						}
+					}
+					/*if(MyStructList[val_] != NULL){
+						if(!strcmp(MyStructList[val_]->name,temp)){
+							//printf("%s %s\n",name,MyArrayList[val]->name);
+							printf("Error type 16 at Line %d: Duplicated name  \"%s\"\n", line, temp); 
+							return;
+						}
+					}*/
+					val_ = (val_ + 1) % N;
 				}
-				else if(!strcmp(temp, "STRUCT") && !strcmp(point1->rnode->name,"Tag")){
-					
+
+				if(MyStructList[val] != NULL){
+					if(!strcmp(MyStructList[val]->name,temp)){
+						//printf("%s %s\n",name,MyArrayList[val]->name);
+						printf("Error type 16 at Line %d: Duplicated name  \"%s\"\n", line, temp); 
+						return;
+					}
+					val_ = (val + 1) % N;
+					while(val_ != val){
+						if(MyStructList[val_] != NULL){
+							if(!strcmp(MyStructList[val_]->name,temp)){
+								//printf("%s %s\n",name,MyArrayList[val]->name);
+								printf("Error type 16 at Line %d: Duplicated name  \"%s\"\n", line, temp); 
+								return;
+							}
+						}else{
+							//add up!
+							MyStructList[val_] = head;
+							break;
+						}
+						val_ = val_ + 1;
+					}
+				}else{
+					//printf("here\n");
+					MyStructList[val] = head;
+					//printf("%s\n", MyStructList[val]->name);
+					//add up!
+				}
+			}
+		}else if(!strcmp(temp, "STRUCT") && !strcmp(point1->rnode->name,"Tag")){					
 				char* name2 = point1->rnode->childnode->val2;
-				int val222 = hash_pjw(name2);//printf("222\n");
+				int val222 = hash_pjw(name2);
 				if(MyStructList[val222] == NULL){
 					printf("Error type 17 at Line %d: Undefined structure \"%s\" \n",point1->line,name2);
 				}
 				else{
+					//printf("name2:%s\n", name2);
 					//while(	MyStructList[val222] != NULL)
 					//	val222++;
-					char* name3 = point1->fathernode->fathernode->rnode->childnode->childnode->val2;
+					char* name3 = point1->fathernode->fathernode->rnode->childnode->childnode->childnode->val2;	//without thinking about struct array
+					//printf("%s\n", name3);
 					int val2222 = hash_pjw(name3);
-					if(MyVarList[val2222].name != NULL){
-										if(!strcmp(MyVarList[val2222].name , temp))
-											{printf("Error type 16 at Line %d: Redefined struct \"%s\"\n", line, name3); 
-											return;}
+					/*if(MyVarList[val2222].name != NULL){
+						if(!strcmp(MyVarList[val2222].name , name3)){
+							printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, name3); 
+							return;
+						}
+					}
+					if(MyFuncList[val2222].name != NULL){
+						if(!strcmp(MyFuncList[val2222].name , name3)){
+							printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, name3); 
+							return;
+						}
+					}
+					if(MyArrayList[val2222] != NULL){
+						if(!strcmp(MyArrayList[val2222]->name, name3)){
+							//printf("%s %s\n",name,MyArrayList[val]->name);
+							printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, name3); 
+							return;
+						}
+					}*/
+					int val2222_ = (val2222 + 1) % N;
+					/*while(val2222_ != val2222){
+						if(MyVarList[val2222_].name != NULL){
+							if(!strcmp(MyVarList[val2222_].name , name3)){
+								printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, name3); 
+								return;
+							}
+						}
+						if(MyFuncList[val2222_].name != NULL){
+							if(!strcmp(MyFuncList[val2222_].name , name3)){
+								printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, name3);
+								return;
+							}
+						}
+						if(MyArrayList[val2222_] != NULL){
+							if(!strcmp(MyArrayList[val2222_]->name, name3)){
+								//printf("%s %s\n",name,MyArrayList[val]->name);
+								printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", line, name3);
+								return;
+							}
+						}
+						val2222_ = (val2222_ + 1) % N;
+					}*/
+					//printf("%s, %s", MyStructList[val222]->name, name2);
+					if(!strcmp(MyStructList[val222]->name, name2)){
+						//TODO
+						if(MyStructList[val222]->list->name == NULL){
+							MyStructList[val222]->list = (struct Structname*)malloc(sizeof(struct Structname));
+							MyStructList[val222]->list->name = name3;
+							MyStructList[val222]->list->next = NULL;
+							//printf("1:%s\n", MyStructList[val222]->list->name);
+						}else{
+							Structname* p = MyStructList[val222]->list;
+							while(p != NULL){
+								p = p->next;
+							}
+							Structname* q = (struct Structname*)malloc(sizeof(struct Structname));
+							q->name = name3;
+							q->next = NULL;
+							p = q;
+						}
+					}else{
+					int val222_ = (val222 + 1) % N;
+					while(val222_ != val222){
+						if(MyStructList[val222_] != NULL){
+							if(!strcmp(MyStructList[val222_]->name,name2)){
+								//TODO
+								if(MyStructList[val222_]->list->name == NULL){
+									MyStructList[val222_]->list = (struct Structname*)malloc(sizeof(struct Structname));
+									MyStructList[val222_]->list->name = name3;
+									MyStructList[val222_]->list->next = NULL;
+								}else{
+									Structname* p = MyStructList[val222_]->list;
+									while(p != NULL){
+										p = p->next;
 									}
-									if(MyFuncList[val2222].name != NULL){
-										if(!strcmp(MyFuncList[val2222].name , temp))
-											{printf("Error type 16 at Line %d: Redefined struct \"%s\"\n", line, name3); 
-											return;}
-									}
-									if(MyArrayList[val2222] != NULL){
-										if(!strcmp(MyArrayList[val2222]->name,temp)){
-										//printf("%s %s\n",name,MyArrayList[val]->name);
-											printf("Error type 16 at Line %d: Redefined struct \"%s\"\n", line, name3); 
-										return;
-										}
-									}
-									if(MyStructList[val2222]!=NULL)
-									{
-										printf("Error type 16 at Line %d: Undefined Structure \"%s\"\n", line,name3);
-										return;
-									}
-									MyStructList[val2222] = MyStructList[val222];
-									
-					
-							
-				}}
-		
+									Structname* q = (struct Structname*)malloc(sizeof(struct Structname));
+									q->name = name3;
+									q->next = NULL;
+									p = q;
+								}
+								break;
+							}
+						}else{
+							printf("Error type 17 at Line %d: Undefined structure \"%s\".\n", line, name2);
+							return;
+						}
+						val222_ = val222_ + 1;
+					}}
+					//printf("%s,%s\n", name2, MyStructList[val222]->list->name);
+				}
+		}
 		
 		Structgenerate(point1->childnode, number + 2);
-		point1 = point1->rnode;}
-		
+		point1 = point1->rnode;
+	}
 }
-
 
 static void Arraygenerate(Node* root, int number) {
 	Node* point1 = root;		
@@ -642,12 +731,17 @@ static void AllInsert(VarList MyVarList[],FuncList MyFuncList[], int array, Node
 			Node* ExtDef = point->childnode->rnode;
 			//printf("addlist %s\n",ExtDef->name);
 			if(!strcmp(ExtDef->name, "ExtDecList")){
-				if( strcmp(point->childnode->childnode->name , "ID"))return;				
+				if( strcmp(point->childnode->rnode->childnode->childnode->name , "ID")){
+					//return;
+					point = point->rnode;
+					continue;
+				}
 				if(ExtDef->line == N)return;
 				Node* trace = ExtDef->childnode;
 				//printf("addlist %s\n",trace->name);
 				VarDecList* MyVarDecList = (struct VarDecList*)malloc(sizeof(struct VarDecList));
 				MyVarDecList->name = NULL;
+				MyVarDecList->next = NULL;
 				MyVarDecListAdd(MyVarDecList, trace);	//need to modify for ArrayList-1
 				
 				while(trace->rnode != NULL){
@@ -657,6 +751,7 @@ static void AllInsert(VarList MyVarList[],FuncList MyFuncList[], int array, Node
 				VarDecList* point_ = MyVarDecList;
 				while(point_ != NULL){
 					char* name = point_->name;
+					//printf("name: %s\n", name);
 					int line = point_->line;
 					unsigned int val = hash_pjw(name);
 					MyVarInsert(MyVarList, val, name, TODO_, line);
@@ -670,6 +765,7 @@ static void AllInsert(VarList MyVarList[],FuncList MyFuncList[], int array, Node
 
 				VarDecList* MyFuncVarList = (struct VarDecList*)malloc(sizeof(struct VarDecList));	//define for copying
 				MyFuncVarList->name = NULL;
+				MyFuncVarList->next = NULL;
 				int flag = 0;
 				Node* trace = ExtDef->childnode->rnode->rnode;
 				
@@ -713,7 +809,12 @@ static void AllInsert_(VarList MyVarList[], FuncList MyFuncList[], int array, No
 	Node* point = root;
 	while(point != NULL && point->line != 0){
 		if(!strcmp(point->name , "Def") ){
-			if( strcmp(point->childnode->rnode->childnode->childnode->childnode->name , "ID"))return;
+			if( strcmp(point->childnode->rnode->childnode->childnode->childnode->name , "ID")){
+				//return;
+				point = point->rnode;
+				continue;
+			}
+
 			int TODO_ = 1;	//default type is "int"
 			char* type_name = point->childnode->childnode->name;
 			
@@ -730,6 +831,7 @@ static void AllInsert_(VarList MyVarList[], FuncList MyFuncList[], int array, No
 			
 			VarDecList* MyVarDecList = (struct VarDecList*)malloc(sizeof(struct VarDecList));
 			MyVarDecList->name = NULL;
+			MyVarDecList->next = NULL;
 			MyVarDecListAdd_(MyVarDecList, trace);
 			while(trace->rnode != NULL){
 				trace = trace->rnode->rnode->childnode; 
@@ -752,71 +854,6 @@ static void AllInsert_(VarList MyVarList[], FuncList MyFuncList[], int array, No
 		point = point->rnode;
 	}
 }
-
-/*static void AllInsert_array_(Node* root){
-	Node* point = root;
-	while(point != NULL && point->line != 0){
-		if(!strcmp(point->name , "Def") ){
-			if( !strcmp(point->childnode->rnode->childnode->childnode->childnode->name , "ID"))return;
-			Node* DecDef = point->childnode->rnode;
-			
-			Node* trace = DecDef->childnode;
-			
-			ArrayList* MyArrayNodeList = (struct ArrayList*)malloc(sizeof(struct ArrayList));
-			MyArrayNodeList->name = NULL;
-			MyArrayNodeListAdd_(MyArrayNodeList, trace);  //trace:  Dec
-			while(trace->rnode != NULL){
-				trace = trace->rnode->rnode->childnode; 
-				MyArrayNodeListAdd_(MyArrayNodeList, trace);
-			}
-			ArrayList* point_ = MyArrayNodeList;
-			while(point_ != NULL){
-				char* name = point_->name;
-				int line = point_->line;
-				printf("addlist %s\n",name);
-				unsigned int val = hash_pjw(name);
-				//printf("%d%s\n", val,name); 
-				MyArrayInsert(point_, val, name, TODO_, line);
-				point_ = point_->next;
-			}
-			point = point->rnode;
-			continue;
-		}
-		AllInsert_array(point->childnode);
-		point = point->rnode;
-	}
-}
-
-
-static void MyArrayInsert_(ArrayList* point_, unsigned int val, char* name, int TODO_, int line){
-	if(MyVarList[val].name == NULL){
-		
-		MyArrayList[val] = point_->myarray;
-		
-		//printf("%d\n", val);
-	}else{
-	//printf("%s %s\n", MyVarList[val].name, name);
-		if(!strcmp(MyArrayList[val].name , name)){
-			printf("Error type 3 at Line %d: Redefined Array \"%s\".\n", line, name); 
-			return;
-		}else{
-			int val_ = (val + 1) % N;
-			while(val_ != val){
-				if(!strcmp(MyArrayList[val_].name , name)){
-					printf("Error type 3 at Line %d: Redefined Array \"%s\".\n", line, name);
-					return;
-				}
-				if(MyArrayList[val_] == NULL){
-					MyArrayList[val_] = point_->myarray;
-					return;
-				}
-				val_ = (val + 1) % N;
-			}
-		}
-		printf("Error: No Space for new variable!\n");
-	}
-}
-*/
 
 static void AllCheck(VarList MyVarList[], FuncList MyFuncList[], int array, Node* root){
 	Node* point = root;
@@ -1091,8 +1128,8 @@ static void MyVarDecListAdd(VarDecList* MyVarDecList, Node* trace){	//define for
 
 static void MyVarDecListAdd_(VarDecList* MyVarDecList,Node* trace){	//define for function
 	if(!strcmp(trace->childnode->childnode->name , "ID")){
-		
 		Node* ID = trace->childnode->childnode;
+		//printf("%s\n", ID->val2);
 		if(MyVarDecList->name == NULL){
 
 			MyVarDecList->name = ID->val2;
@@ -1157,6 +1194,7 @@ static void MyVarDecListAdd__(VarDecList* MyVarDecList, Node* trace, VarList MyV
 			}
 		}
 		if(flag == 0){
+			//printf("id:1\n");
 			printf("Error type 1 at Line %d: Undefined variable \"%s\".\n", p->line, p->val2);
 			return;
 		}
@@ -1225,7 +1263,7 @@ static void NodepflagAdd(VarList MyVarList[], FuncList MyFuncList[], Node* point
 	Node* point_ = point;
 	//printf("pflagAdd: %s\n", point_->name);
 	while(point_ != NULL && point_->line != 0){
-		if(!strcmp(point_->name, "ID")){
+		if(!strcmp(point_->name, "ID")){	//find "ID"
 			//printf("%s\n", point_->val2);
 			/*Node* w = point_;
 			while(w){
@@ -1239,7 +1277,6 @@ static void NodepflagAdd(VarList MyVarList[], FuncList MyFuncList[], Node* point
 					for(i=0; i<N; i++){
 						//break;
 						if(MyArrayList[i] != NULL && !strcmp(point_->val2, MyArrayList[i]->name)){
-
 							Flag_ID = 1;
 							if(MyArrayList[i]->mytype->u.basic == 1){
 								point_->pflag = 0;
@@ -1281,15 +1318,35 @@ static void NodepflagAdd(VarList MyVarList[], FuncList MyFuncList[], Node* point
 						}
 					}
 					if(Flag_ID != 1){
+						//printf("id:2\n");
 						printf("Error type 1 at Line %d: Undefined variable \"%s\".\n", point_->line, point_->val2);
 					}
 				}else if(point_->fathernode->rnode != NULL && !strcmp(point_->fathernode->rnode->name, "DOT")){	//structure name
-					/*int i;
-					for(i=0; i<N; i++){}
+					int i;
+					for(i=0; i<N; i++){
+						if(MyStructList[i] != NULL){
+							int flag_ = 0;
+							Structname* p = MyStructList[i]->list;
+							while(p != NULL){
+								if(p->name != NULL && !strcmp(p->name, point_->val2)){
+									//printf("%s\n", p->name);
+									Flag_ID = 1;
+									flag_ = 1;
+									break;
+								}else{
+									p = p->next;
+								}
+							}
+							if(flag_ == 1){
+								break;
+							}
+						}
+					}
 					if(Flag_ID != 1){
 						for(i=0; i<N; i++){
 							if(MyVarList[i].name != NULL && !strcmp(point_->val2, MyVarList[i].name)){
 								Flag_ID = 1;
+								//printf("Var\n");
 								printf("Error type 13 at Line %d: Illegal use of \".\".\n", point_->line);
 								break;
 							}
@@ -1306,7 +1363,7 @@ static void NodepflagAdd(VarList MyVarList[], FuncList MyFuncList[], Node* point
 					}
 					if(Flag_ID != 1){
 						for(i=0; i<N; i++){
-							if(MyArrayList[i]->name != NULL && !strcmp(point_->val2, MyArrayList[i]->name)){
+							if(MyArrayList[i] != NULL && !strcmp(point_->val2, MyArrayList[i]->name)){
 								Flag_ID = 1;
 								printf("Error type 13 at Line %d: Illegal use of \".\".\n", point_->line);
 								break;
@@ -1315,10 +1372,11 @@ static void NodepflagAdd(VarList MyVarList[], FuncList MyFuncList[], Node* point
 					}
 					if(Flag_ID != 1){
 						printf("Error type 1 at Line %d: Undefined variable \"%s\".\n", point_->line, point_->val2);
-					}*/
+					}
 				}else if(point_->fathernode->childnode != NULL && !strcmp(point_->fathernode->childnode->name, "Exp")){	//structure field name
 					
-				}else{
+				}else{	//just arrat ID
+					//printf("%s\n", point_->val2);
 					int i;
 					for(i=0; i<N; i++){
 						if(MyVarList[i].name != NULL && !strcmp(point_->val2, MyVarList[i].name)){
@@ -1332,11 +1390,12 @@ static void NodepflagAdd(VarList MyVarList[], FuncList MyFuncList[], Node* point
 						}
 					}
 					if(Flag_ID != 1){
+						//printf("id:3\n");
 						printf("Error type 1 at Line %d: Undefined variable \"%s\".\n", point_->line, point_->val2);
 					}
 				}
 				//printf("%d\n", point_->pflag);
-			}else{
+			}else{	//function
 				int i;
 				int Flag_ID = 0;
 				for(i=0; i<N; i++){
@@ -1372,7 +1431,7 @@ static void NodepflagAdd(VarList MyVarList[], FuncList MyFuncList[], Node* point
 				}
 				if(Flag_ID != 1){
 					for(i=0; i<N; i++){
-						if(MyArrayList[i]->name != NULL && !strcmp(point_->val2, MyArrayList[i]->name)){
+						if(MyArrayList[i] != NULL && !strcmp(point_->val2, MyArrayList[i]->name)){
 							Flag_ID = 1;
 							printf("Error type 11 at Line %d: \"%s\" is not an function.\n", point_->line, point_->val2);
 							break;
@@ -1472,7 +1531,7 @@ void MyFuncCompare(FuncList MyFuncList[], VarDecList* MyVarDecList, int value){
 	}
 }
 
-static void AllSetpflag(Node* root){
+static void AllSetpflag(Node* root){	//set all
 	Node* point = root;
 	//printf("root: %s\n", point->name);
 	while(point != NULL && point->line != 0){
@@ -1482,19 +1541,59 @@ static void AllSetpflag(Node* root){
 			}
 			Node* p =point->childnode;
 			//printf("%s %d\n", p->name, p->pflag);
-			if(p->name == "Exp" && p->rnode->name == "LB"){
+			if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "LB")){
 				if(p->pflag != -1){
 					point->pflag = p->pflag;
 				}else{
 					AllSetpflag(p);
 				}
 				return;
-			}else if(p->name == "Exp" && p->rnode->name == "DOT"){
+			}else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "DOT")){
 				point->pflag = p->rnode->rnode->pflag; 
 				return;
-			}else if(p->name == "ID" || p->name == "INT" || p->name == "FLOAT"){
+			}else if(!strcmp(p->name, "INT") || !strcmp(p->name, "FLOAT")){
 				point->pflag = p->pflag;
 				return;
+			}else if(!strcmp(p->name, "ID")){	//think about exp in array
+				//point->pflag = p->pflag;
+				//return;
+				int  Flag_ID = 0;
+				int i;
+				if(!strcmp(p->fathernode->rnode->name, "LB")){
+					for(i=0; i<N; i++){
+						if(MyArrayList[i] != NULL && !strcmp(p->val2, MyArrayList[i]->name)){
+							Flag_ID = 1;
+							if(MyArrayList[i]->mytype->u.basic == 1){
+								p->pflag = 0;
+							}else{
+								p->pflag = 1; 
+							}
+						}
+						point->pflag = p->pflag;
+						break;
+					}
+				}else if(p->rnode != NULL && !strcmp(p->rnode->name, "LP")){
+					point->pflag = p->pflag;
+					return;
+				}else{
+					for(i=0; i<N; i++){
+						if(MyVarList[i].name != NULL && !strcmp(p->val2, MyVarList[i].name)){
+							Flag_ID = 1;
+							if(MyVarList[i].type.u.basic == 1){
+								p->pflag = 0;
+							}else{
+								p->pflag = 1; 
+							}
+							point->pflag = p->pflag;
+							break;
+						}
+					}
+					if(Flag_ID != 1){
+						//printf("id:3\n");
+						printf("Error type 1 at Line %d: Undefined variable \"%s\".\n", p->line, p->val2);
+					}
+					return;
+				}
 			}else{
 				Node* q = p;
 				int pflag = -1;
@@ -1511,6 +1610,7 @@ static void AllSetpflag(Node* root){
 								if(equalflag == 1){
 									printf("Error type 5 at Line %d: Type mismatched for assignment.\n", q->line);
 								}else{
+									//printf("ok!\n");
 									printf("Error type 7 at Line %d: Type mismatched for operands.\n", q->line);
 								}
 							}
@@ -1523,7 +1623,8 @@ static void AllSetpflag(Node* root){
 							pflag = q->pflag;
 						}else{
 							if(q->pflag != pflag){
-								printf("%d %d\n", q->pflag, pflag);
+								//printf("%s", q->childnode->name);
+								//printf("%d %d\n", q->pflag, pflag);
 								if(equalflag == 1){
 									printf("Error type 5 at Line %d: Type mismatched for assignment.\n", q->line);
 								}else{

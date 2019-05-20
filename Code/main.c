@@ -58,17 +58,22 @@ int i;
 		//generate(root,0);
 		
 		Treefather(root); 
-		//Arraygenerate(root,0);	
+		Arraygenerate(root,0);	
 		lineflag = 1;
 		//printf("%s\n",MyArrayList[97]->name);
 	
-		
-		//define the structure of array
-	
-		AllInsert(MyVarList, MyFuncList, 0, root);//printf("error there\n");	//0 for the loss of array
+		AllInsert(MyVarList, MyFuncList, 0, root);
+		//printf("error there\n");	//0 for the loss of array
 		AllInsert_(MyVarList, MyFuncList, 0, root);
 
-		//Structgenerate(root,0);
+		//printf("error there\n");
+		Structgenerate(root,0);
+		/*int k;
+		for(k=0;k<N;k++){
+			if(MyStructList[k] != NULL){
+				printf("%s\n", MyStructList[k]->name);
+			}
+		}*/
 		AllCheck(MyVarList, MyFuncList, 0, root);
 		AllSetpflag(root);
 		FuncCheckRe(root);
