@@ -1,12 +1,15 @@
 struct Position
 {
-	float x,y;
-	int a[2];
+	float x, y;
 };
 
 int main()
 {
-	struct Position j;
-	int i;
-	j.m;
+	struct Position p;
+	int a[2];
+	int m;
+	if(p.n == 3.7)
+		return 0;
+	m = 2.0;
+	5 = a[1];
 }

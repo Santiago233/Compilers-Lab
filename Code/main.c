@@ -66,7 +66,6 @@ int i;
 		//printf("error there\n");	//0 for the loss of array
 		AllInsert_(MyVarList, MyFuncList, 0, root);
 
-		//printf("error there\n");
 		Structgenerate(root,0);
 		/*int k;
 		for(k=0;k<N;k++){
@@ -75,6 +74,7 @@ int i;
 			}
 		}*/
 		AllCheck(MyVarList, MyFuncList, 0, root);
+		//printf("error there\n");
 		AllSetpflag(root);
 		FuncCheckRe(root);
 	}
