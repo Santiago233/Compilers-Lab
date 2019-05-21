@@ -20,6 +20,9 @@ Semantic Analysis:
 
 
 Tips:
+
 (1)Due to the terrible grammar of C--, some right instructions can be reported as Lexical errors
+
 (2)some Gramma errors cannot be recovered by the authors
+
 (3)some Semantic errors might be reported twice in different ways due to the execution order in function 'Main' && the storage of structures
