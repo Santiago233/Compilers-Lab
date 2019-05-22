@@ -66,6 +66,8 @@ InterCodes translate_Stmt(Node*);
 InterCodes translate_Cond(Node*, Operand, Operand);
 //InterCodes translate_Exp();
 InterCodes translate_Args(Node*, ARG_LIST); 
+InterCodes combine(InterCodes, InterCodes);
+InterCodes into_lable(Operand);
 void codeoutput();
 void opeoutput();
 
@@ -98,28 +100,28 @@ Operand new_operand(){
 Operand get_relop(Node* relop){
 	Operand p = new_operand();
 	p->kind = RELOP_;
-	switch(relop->name){
-		case "RELOP_DAYU":{
+	switch(relop->kind){       //find it in node.h
+		case RELOP_DAYU:{
 			p->u.relop = ">";
 			break;
 		}
-		case "RELOP_XIAOYU":{
+		case RELOP_XIAOYU:{
 			p->u.relop = "<";
 			break;
 		}
-		case "RELOP_DAYUDENGYU":{
+		case RELOP_DAYUDENGYU:{
 			p->u.relop = ">=";
 			break;
 		}
-		case "RELOP_XIAOYUDENGYU":{
+		case RELOP_XIAOYUDENGYU:{
 			p->u.relop = "<=";
 			break;
 		}
-		case "RELOP_LIANDENG":{
+		case RELOP_LIANDENG:{
 			p->u.relop = "==";
 			break;
 		}
-		case "RELOP_BUDENGYU":{
+		case RELOP_BUDENGYU:{
 			p->u.relop = "!=";
 			break;
 		}
@@ -140,9 +142,46 @@ InterCodes translate_Cond(Node* Exp, Operand lable_true, Operand lable_false){
 
 }
 //InterCodes translate_Exp();
-InterCodes translate_Args(Node* ARGS, ARG_LIST arglist){
+InterCodes translate_Args(Node* Args, ARG_LIST arglist){
+	Node* Exp = Args->childnode;
+	if(Exp->rnode == NULL){
+		Operand t1 = new_temp();
+		InterCodes code1 = translate_Exp(Exp, t1);
+		ARG_LIST templist = (ARG_LIST)malloc(sizeof(struct ARG_LIST_));
+		templist->arg = t1;
+		templist->next = arglist;
+		return code1;
+	}
+	else if(!strcmp(Exp->rnode->name , "COMMA")){
+		Operand t1 = new_temp();
+		InterCodes code1 = translate_Exp(Exp ,t1);
+		ARG_LIST templist = (ARG_LIST)malloc(sizeof(struct ARG_LIST_));
+		templist->arg = t1;
+		templist->next = arglist;
+		InterCodes code2 = translate_Args(Exp->rnode->rnode, templist);
+		return combine(code1,code2);
+	}
+	else{
+		printf("error in translate_Args\n");
+	}
 
+}
 
+InterCodes combine(InterCodes code1, InterCodes code2){   //like as insert one code2;
+	InterCodes temp1 = code1->next;
+	//InterCodes temp2 = code2->prev;
+	code1->next = code2;
+	code2->prev = code1;
+	code2->next = temp1;
+	temp1->prev = code2;
+	return code1;
+}
+
+InterCodes into_lable(Operand lable){
+	InterCodes code = new_intercodes();
+	code->code->kind = LABLE;
+	code->code->u.noop.result = lable;
+	return code;
 }
 
 
