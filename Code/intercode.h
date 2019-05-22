@@ -58,6 +58,10 @@ Operand new_temp();
 Operand new_lable();
 Operand get_relop(Node*);
 InterCodes new_intercodes();
+InterCodes new_noop(InterCodes , Operand);
+InterCodes new_sinop(InterCodes , Operand, Operand);
+InterCodes new_binop(InterCodes , Operand, Operand, Operand);
+InterCodes new_if_go();
 InterCodes translate_Exp(Node*, Operand);
 InterCodes translate_Stmt(Node*);
 InterCodes translate_Cond(Node*, Operand, Operand);
@@ -234,6 +238,25 @@ InterCodes into_lable(Operand lable){
 	code->code->kind = LABLE;
 	code->code->u.noop.result = lable;
 	return code;
+}
+
+InterCodes new_noop(InterCodes code, Operand result){
+	InterCodes p = code;
+	p->u.noop.result = result;
+	return p;
+}
+InterCodes new_sinop(InterCodes code, Operand result, Operand op){
+	InterCodes p = code;
+	p->u.sinop.result = result;
+	p->u.sinop.op = op;
+	return p;
+}
+InterCodes new_binop(InterCodes code, Operand result, Operand op1, Operand op2){
+	InterCodes p = code;
+	p->u.binop.result = result;
+	p->u.binop.op1 = op1;
+	p->u.binop.op2 = op2;
+	return p;
 }
 
 
