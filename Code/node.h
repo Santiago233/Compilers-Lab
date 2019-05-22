@@ -1334,11 +1334,12 @@ static void MyVarDecListAdd__(VarDecList* MyVarDecList, Node* trace, VarList MyV
 		int flag = 0;
 		Type_ type_;
 		for(i=0; i<N; i++){	//remember to compare with arraylist and structlist
-			if(!strcmp(p->val2, MyVarList[i].name)){
+			if(MyVarList[i].name != NULL && !strcmp(p->val2, MyVarList[i].name)){
 				flag = 1;
 				type_ = MyVarList[i].type;
 			}
 		}
+
 		if(flag == 0){
 			//printf("id:1\n");
 			printf("Error type 1 at Line %d: Undefined variable \"%s\".\n", p->line, p->val2);
@@ -1682,6 +1683,8 @@ void MyFuncCompare(FuncList MyFuncList[], VarDecList* MyVarDecList, int value){
 		while(p3){
 			if(p3->type.u.basic != p4->type.u.basic){
 				flag = 1;
+				//printf("error is here!\n");
+				break;
 			}
 			p3 = p3->next;
 			p4 = p4->next;

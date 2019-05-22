@@ -1,5 +1,6 @@
-int main()
-{
-	int i = 1;
-	int j = 2;
+int func(int i, int j){
+	int a;
+	int b;
+	func(a,b);
+	return 0;
 }
