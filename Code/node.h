@@ -1140,12 +1140,15 @@ static void MyFuncInsert(FuncList MyFuncList[], unsigned int val, char* name, in
 		VarDecList* p = MyFuncVarList;
 		//int number = 0;
 		while(p){	//may go wrong for the reason that MyFuncVarList is empty
-			if(MyFuncList[val].FuncVarList->name == NULL){				
+			if(MyFuncList[val].FuncVarList->name == NULL){
+				/*if(MyFuncList[val].type.u.basic == 1){printf("val1\n");}
+				else if(MyFuncList[val].type.u.basic == 2){printf("val2\n");}*/
 				MyFuncList[val].FuncVarList->name = p->name;
 				MyFuncList[val].FuncVarList->type = p->type;
 				MyFuncList[val].FuncVarList->next = NULL;
 			}else{
-				
+				/*if(MyFuncList[val].type.u.basic == 1){printf("val1\n");}
+				else if(MyFuncList[val].type.u.basic == 2){printf("val2\n");}*/
 				VarDecList* point = MyFuncList[val].FuncVarList;
 				while(point->next != NULL){
 					point = point->next;
@@ -1345,6 +1348,7 @@ static void MyVarDecListAdd__(VarDecList* MyVarDecList, Node* trace, VarList MyV
 			printf("Error type 1 at Line %d: Undefined variable \"%s\".\n", p->line, p->val2);
 			return;
 		}
+		//printf("%d\n", type_.u.basic);
 		if(MyVarDecList->name == NULL){
 			MyVarDecList->name = p->val2;
 			MyVarDecList->line = p->line;
@@ -1666,11 +1670,13 @@ void MyFuncCompare(FuncList MyFuncList[], VarDecList* MyVarDecList, int value){
 			p1 = p1->next;
 		}else{
 			number1 += 1;
+			//printf("p1:%d\n", p1->type.u.basic);
 			p1 = p1->next;
 		}
 	} 
 	while(p2){
 		number2 += 1;
+		//printf("p2:%d\n", p2->type.u.basic);
 		p2 = p2->next;
 	}
 	int flag = 0;
@@ -1681,6 +1687,8 @@ void MyFuncCompare(FuncList MyFuncList[], VarDecList* MyVarDecList, int value){
 		VarDecList* p3 = point;
 		VarDecList* p4 = MyVarDecList;
 		while(p3){
+			if(p3->type.u.basic == 0){p3 = p3->next;}
+			if(p4->type.u.basic == 0){p4 = p4->next;}
 			if(p3->type.u.basic != p4->type.u.basic){
 				flag = 1;
 				//printf("error is here!\n");

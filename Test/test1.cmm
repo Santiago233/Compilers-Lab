@@ -1,6 +1,4 @@
-int func(int i, int j){
-	int a;
-	int b;
-	func(a,b);
+int func(int i, int j,int z){
+	func(i,j,z);
 	return 0;
 }

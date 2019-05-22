@@ -49,6 +49,7 @@ extern struct Type_ TYPE_MYINT;
 extern struct Type_ TYPE_MYFLOAT;
 int tcount;
 int lcount;
+int vcount;
 
 
 //FUNCTIONs
@@ -135,6 +136,8 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 	if(!strcmp(p->name, "INT")){
 		InterCodes expcode = new_intercodes();
 		expcode->code->kind = ASSIGN;
+		expcode->code->u.sinop.result = new_operand();
+		expcode->code->u.sinop.op = new_operand();
 		expcode->code->u.sinop.result = place;
 		expcode->code->u.sinop.op->kind = CONSTANT;
 		expcode->code->u.sinop.op->u.value = *(int*)&p->val;
@@ -142,26 +145,32 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 	}else if(!strcmp(p->name, "ID")){
 		InterCodes expcode = new_intercodes();
 		expcode->code->kind = ASSIGN;
+		expcode->code->u.sinop.result = new_operand();
+		expcode->code->u.sinop.op = new_operand();
 		expcode->code->u.sinop.result = place;
 		expcode->code->u.sinop.op->kind = VARIABLE;
-		expcode->code->u.sinop.op->u.var_no = tcount;
-		tcount ++;
+		expcode->code->u.sinop.op->u.var_no = vcount;
+		vcount ++;
 		return expcode;
 	}else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "ASSIGNOP")){
 		Operand tmp = new_temp();
 		InterCodes expcode1 = translate_Exp(p->rnode->rnode, tmp);
 		InterCodes expcode2 = new_intercodes();
 		expcode2->code->kind = ASSIGN;
+		expcode2->code->u.sinop.result = new_operand();
+		expcode2->code->u.sinop.op = new_operand();
 		expcode2->code->u.sinop.result->kind = VARIABLE;
-		expcode2->code->u.sinop.result->u.var_no = tcount;
-		tcount ++;
+		expcode2->code->u.sinop.result->u.var_no = vcount;
+		vcount ++;
 		expcode2->code->u.sinop.op = tmp;
 		InterCodes expcode3 = new_intercodes();
 		expcode3->code->kind = ASSIGN;
+		expcode3->code->u.sinop.result = new_operand();
+		expcode3->code->u.sinop.op = new_operand();
 		expcode3->code->u.sinop.result = place;
 		expcode3->code->u.sinop.op->kind = VARIABLE;
-		expcode3->code->u.sinop.op->u.var_no = tcount;
-		tcount ++;
+		expcode3->code->u.sinop.op->u.var_no = vcount;
+		vcount ++;
 		expcode2 = combine(expcode2, expcode3);
 		expcode1 = combine(expcode1, expcode2);
 		return expcode1;
@@ -180,6 +189,9 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		}else{
 			expcode3->code->kind = DIVIDE;
 		}
+		expcode3->code->u.sinop.result = new_operand();
+		expcode3->code->u.sinop.op1 = new_operand();
+		expcode3->code->u.sinop.op2 = new_operand();
 		expcode3->code->u.binop.result = place;
 		expcode3->code->u.binop.op1 = tmp1;
 		expcode3->code->u.binop.op2 = tmp2;
