@@ -59,6 +59,7 @@ int lcount;
 Operand new_operand();
 Operand new_temp();
 Operand new_lable();
+Operand get_relop(Node*);
 InterCodes new_intercodes();
 InterCodes translate_Exp(Node*, Operand);
 InterCodes translate_Stmt(Node*);
@@ -81,15 +82,48 @@ Operand new_temp(){
 	Operand op = new_operand();
 	op->u.var_no = tcount;
 	op->kind = TEMPORARY;
+	return op;
 }
 Operand new_lable(){
 	lcount ++;
 	Operand op = new_operand();
 	op->u.var_no = lcount;
 	op->kind = LABLE_;
+	return op;
 }
 Operand new_operand(){
 	Operand p = (Operand)malloc(sizeof(struct Operand_));
+	return p;
+}
+Operand get_relop(Node* relop){
+	Operand p = new_operand();
+	p->kind = RELOP_;
+	switch(relop->name){
+		case "RELOP_DAYU":{
+			p->u.relop = ">";
+			break;
+		}
+		case "RELOP_XIAOYU":{
+			p->u.relop = "<";
+			break;
+		}
+		case "RELOP_DAYUDENGYU":{
+			p->u.relop = ">=";
+			break;
+		}
+		case "RELOP_XIAOYUDENGYU":{
+			p->u.relop = "<=";
+			break;
+		}
+		case "RELOP_LIANDENG":{
+			p->u.relop = "==";
+			break;
+		}
+		case "RELOP_BUDENGYU":{
+			p->u.relop = "!=";
+			break;
+		}
+	}
 	return p;
 }
 
