@@ -8,7 +8,7 @@ typedef struct Operand_* Operand;
 typedef struct InterCode_* InterCode;
 typedef struct InterCodes_* InterCodes;
 typedef struct ARG_LIST_* ARG_LIST;
-struct Operand_{
+typedef struct Operand_{
 	enum {VARIABLE,CONSTANT,TEMPORARY,ADDRESS,FUNCTION_NAME,LABLE_,RELOP_}kind;
 	union{
 		int var_no;
@@ -16,20 +16,17 @@ struct Operand_{
 		char* funcname;
 		char* relop;
 	}u;
-};
+}Operand_;
 
 
 typedef struct InterCode_{
 	enum{ASSIGN,ADD,SUB,MUL,DIVIDE,FUNCTION,LABLE,ADDR_TO,VALUE_TO,TO_VALUE,GOTO,IF_GOTO,RETURN_,DEC,ARG,CALL,PARAM,READ,WRITE}kind;
 	union{
-		struct{Operand op1,op2,op3,op;}if_goto;
-		struct{Operand right,left;}assign;
-		struct 
-		{
-			Operand result, op1, op2;
-		}binop; //
-		struct{Operand result,op;}sinop;
-		struct{Operand result;}noop;
+		struct{Operand op1,op2,op3,op;}if_goto;	//if goto
+		struct{Operand right,left;}assign;	//useless
+		struct{Operand result, op1, op2;}binop;	//binocular operation
+		struct{Operand result,op;}sinop;	//monocular operation && assign
+		struct{Operand result;}noop;	//nop operation
 	}u;
 }InterCode_;   
 
@@ -130,7 +127,62 @@ Operand get_relop(Node* relop){
 }
 
 InterCodes translate_Exp(Node* Exp, Operand place){
-
+	Node* p = Exp->childnode;
+	if(!strcmp(p->name, "INT")){
+		InterCodes expcode = new_intercodes();
+		expcode->code->kind = ASSIGN;
+		expcode->code->u.sinop.result = place;
+		expcode->code->u.sinop.op->kind = CONSTANT;
+		expcode->code->u.sinop.op->u.value = *(int*)&p->val;
+		return expcode;
+	}else if(!strcmp(p->name, "ID")){
+		InterCodes expcode = new_intercodes();
+		expcode->code->kind = ASSIGN;
+		expcode->code->u.sinop.result = place;
+		expcode->code->u.sinop.op->kind = VARIABLE;
+		expcode->code->u.sinop.op->u.var_no = tcount;
+		tcount ++;
+		return expcode;
+	}else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "ASSIGNOP")){
+		Operand tmp = new_temp();
+		InterCodes expcode1 = translate_Exp(p->rnode->rnode, tmp);
+		InterCodes expcode2 = new_intercodes();
+		expcode2->code->kind = ASSIGN;
+		expcode2->code->u.sinop.result->kind = VARIABLE;
+		expcode2->code->u.sinop.result->u.var_no = tcount;
+		tcount ++;
+		expcode2->code->u.sinop.op = tmp;
+		InterCodes expcode3 = new_intercodes();
+		expcode3->code->kind = ASSIGN;
+		expcode3->code->u.sinop.result = place;
+		expcode3->code->u.sinop.op->kind = VARIABLE;
+		expcode3->code->u.sinop.op->u.var_no = tcount;
+		tcount ++;
+		expcode2 = combine(expcode2, expcode3);
+		expcode1 = combine(expcode1, expcode2);
+		return expcode1;
+	}else if(!strcmp(p->name, "Exp") && (!strcmp(p->rnode->name, "PLUS") || !strcmp(p->rnode->name, "MINUS") || !strcmp(p->rnode->name, "STAR") || !strcmp(p->rnode->name, "DIV"))){
+		Operand tmp1 = new_temp();
+		Operand tmp2 = new_temp();
+		InterCodes expcode1 = translate_Exp(p, tmp1);
+		InterCodes expcode2 = translate_Exp(p->rnode->rnode, tmp2);
+		InterCodes expcode3 = new_intercodes();
+		if(!strcmp(p->rnode->name, "PLUS")){
+			expcode3->code->kind = ADD;
+		}else if(!strcmp(p->rnode->name, "MINUS")){
+			expcode3->code->kind = SUB;
+		}else if(!strcmp(p->rnode->name, "STAR")){
+			expcode3->code->kind = MUL;
+		}else{
+			expcode3->code->kind = DIVIDE;
+		}
+		expcode3->code->u.binop.result = place;
+		expcode3->code->u.binop.op1 = tmp1;
+		expcode3->code->u.binop.op2 = tmp2;
+		expcode1 = combine(expcode1, expcode2);
+		expcode1 = combine(expcode1, expcode3);
+		return expcode1;
+	}else if(){}
 }
 
 InterCodes translate_Stmt(Node* Stmt){
