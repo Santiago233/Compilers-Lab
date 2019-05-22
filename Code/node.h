@@ -8,6 +8,7 @@
 typedef struct Type_* Type;
 typedef struct FieldList_*  FieldList;
 typedef struct Node{
+		enum {RELOP_DAYU,RELOP_XIAOYU,RELOP_DAYUDENGYU,RELOP_XIAOYUDENGYU,RELOP_LIANDENG,RELOP_BUDENGYU}kind;
 		int line;
 		char name[20];
 		YYSTYPE val;
