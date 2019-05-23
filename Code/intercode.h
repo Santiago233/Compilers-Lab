@@ -38,7 +38,7 @@ typedef struct InterCode_{
 typedef struct member_{
 	char* name;
 	int vcount;
-	struct member next;
+	member next;
 }member_;
 
 /*typedef struct func_{
@@ -282,11 +282,11 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 				expcode2->code->kind = ARG;
 				q = q->next;
 			}
-			Operand op = new_operand();
-			op->kind = FUNCTION;
-			op->u.funcname = name;
+			Operand op_ = new_operand();
+			op_->kind = FUNCTION;
+			op_->u.funcname = name;
 			InterCodes expcode3 = new_intercodes();
-			expcode3 = new_sinop(expcode3, place, op);
+			expcode3 = new_sinop(expcode3, place, op_);
 			expcode3->code->kind = CALL;
 			return combine(combine(expcode1, expcode2), expcode3);
 		}
@@ -305,7 +305,7 @@ InterCodes translate_Stmt(Node* Stmt){
 		Operand tmp = new_temp();
 		InterCodes expcode1 = translate_Exp(p->rnode, tmp);
 		InterCodes expcode2 = new_intercodes();
-		expcode2 = new_noop(expcode2, t1);
+		expcode2 = new_noop(expcode2, tmp);
 		expcode2->code->kind = RETURN_;
 		return combine(expcode1, expcode2);
 	}else if(!strcmp(p->name, "IF")){
@@ -326,7 +326,7 @@ InterCodes translate_Stmt(Node* Stmt){
 			InterCodes expcode3 = translate_Stmt(p->rnode->rnode->rnode->rnode->rnode->rnode);
 			InterCodes exp1 = into_label(label1);
 			InterCodes exp2 = new_intercodes();
-			InterCodes exp2 = new_noop(exp2, label3);
+			exp2 = new_noop(exp2, label3);
 			exp2->code->kind = GOTO;
 			InterCodes exp3 = into_label(label2);
 			InterCodes exp4 = into_label(label3);
@@ -376,7 +376,7 @@ InterCodes translate_Cond(Node* Exp, Operand label_true, Operand label_false){
 		code1 = translate_Cond(point,label1,label_false);
 		code2 = translate_Cond(point,label_true,label_false);
 		code3 = new_intercodes();
-		code3->code->kind = label;
+		code3->code->kind = LABEL;
 		code3 = new_noop(code3,label1);
 		code1 = combine(code1,code3);
 		code1 = combine(code1,code2);
@@ -389,7 +389,7 @@ InterCodes translate_Cond(Node* Exp, Operand label_true, Operand label_false){
 		code1 = translate_Cond(point,label_true,label1);
 		code2 = translate_Cond(point,label_true,label_false);
 		code3 = new_intercodes();
-		code3->code->kind = label;
+		code3->code->kind = LABEL;
 		code3 = new_noop(code3,label1);
 		code1 = combine(code1,code3);
 		code1 = combine(code1,code2);
@@ -455,7 +455,7 @@ InterCodes combine(InterCodes code1, InterCodes code2){   //like as insert one c
 
 InterCodes into_label(Operand label){
 	InterCodes code = new_intercodes();
-	code->code->kind = label;
+	code->code->kind = LABEL;
 	code->code->u.noop.result = label;
 	return code;
 }
@@ -491,7 +491,7 @@ InterCodes new_if_go(Operand op1,Operand op2,Operand op3,Operand op){
 }
 
 void codeoutput(InterCodes srccode){
-	//enum{ASSIGN,ADD,SUB,MUL,DIVIDE,FUNCTION,label,ADDR_TO,VALUE_TO,TO_VALUE,GOTO,IF_GOTO,RETURN_,DEC,ARG,CALL,PARAM,READ,WRITE}kind;
+	//enum{ASSIGN,ADD,SUB,MUL,DIVIDE,FUNCTION,LABEL,ADDR_TO,VALUE_TO,TO_VALUE,GOTO,IF_GOTO,RETURN_,DEC,ARG,CALL,PARAM,READ,WRITE}kind;
 	InterCodes tcode = srccode;
 	while(tcode != NULL){
 		switch (tcode->code->kind){
@@ -501,7 +501,7 @@ void codeoutput(InterCodes srccode){
 				printf(" :\n");
 				break;
 			}
-			case label:{
+			case LABEL:{
 				printf("label ");
 				opeoutput(tcode->code->u.noop.result);
 				printf(" :\n");
@@ -659,7 +659,7 @@ void opeoutput(Operand op){
 			printf("#%d", op->u.value);
 			break;
 		}
-		case label_:{
+		case LABEL_:{
 			printf("label%d", op->u.var_no);
 			break;
 		}
@@ -682,10 +682,10 @@ void opeoutput(Operand op){
 
 int lookup(char* val){	//variable
 	if(vlist == NULL){
-		vlist = (struct member)malloc(sizeof(struct member_));
+		vlist = (member)malloc(sizeof(struct member_));
 		vlist->name = val;
 		vlist->vcount = vcount;
-		vount += 1;
+		vcount += 1;
 		vlist->next = NULL;
 		return vlist->vcount;
 	}else{
@@ -696,7 +696,7 @@ int lookup(char* val){	//variable
 		}
 		if(!strcmp(p->name, val)){return p->vcount;}
 		else{
-			member q = (struct member)malloc(sizeof(struct member_));
+			member q = (member)malloc(sizeof(struct member_));
 			q->name = val;
 			q->vcount = vcount;
 			vcount += 1;
