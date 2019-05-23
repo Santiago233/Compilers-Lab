@@ -62,7 +62,7 @@ InterCodes new_intercodes();
 InterCodes new_noop(InterCodes , Operand);
 InterCodes new_sinop(InterCodes , Operand, Operand);
 InterCodes new_binop(InterCodes , Operand, Operand, Operand);
-InterCodes new_if_go();
+InterCodes new_if_go(Operand,Operand,Operand,Operand);
 InterCodes translate_Exp(Node*, Operand);
 InterCodes translate_Stmt(Node*);
 InterCodes translate_Cond(Node*, Operand, Operand);
@@ -189,16 +189,16 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		}else{
 			expcode3->code->kind = DIVIDE;
 		}
-		expcode3->code->u.sinop.result = new_operand();
-		expcode3->code->u.sinop.op1 = new_operand();
-		expcode3->code->u.sinop.op2 = new_operand();
+		expcode3->code->u.binop.result = new_operand();
+		expcode3->code->u.binop.op1 = new_operand();
+		expcode3->code->u.binop.op2 = new_operand();
 		expcode3->code->u.binop.result = place;
 		expcode3->code->u.binop.op1 = tmp1;
 		expcode3->code->u.binop.op2 = tmp2;
 		expcode1 = combine(expcode1, expcode2);
 		expcode1 = combine(expcode1, expcode3);
 		return expcode1;
-	}else if(){}
+	}else if(1){}
 }
 
 InterCodes translate_Stmt(Node* Stmt){
@@ -206,6 +206,75 @@ InterCodes translate_Stmt(Node* Stmt){
 
 }
 InterCodes translate_Cond(Node* Exp, Operand lable_true, Operand lable_false){
+	Node* point = Exp->childnode;
+	if(!strcmp(point->name ,"EXP") && strstr(point->rnode->name,"RELOP")){
+		Operand t1,t2,op;
+		t1 = new_temp();
+		t2 = new_temp();
+		InterCodes code1,code2,code3;
+		code1 = translate_Exp(point, t1);
+		code2 = translate_Exp(point->rnode->rnode,t2);
+		op = get_relop(point->rnode);
+		code3 = new_if_go(t1,t2,lable_true,op);
+		InterCodes code4 = new_intercodes();
+		code4->code->kind = GOTO;
+		//Operand lable_false = new_lable();
+		code4->code->u.noop.result = lable_false;
+		code1 = combine(code1,code2);
+		code1 = combine(code1,code3);
+		code1 = combine(code1,code4);
+		return code1;
+	}
+	else if(!strcmp(point->name,"NOT") && !strcmp(point->rnode->name,"EXP")){
+		return translate_Cond(point->rnode,lable_false,lable_true);
+	}
+	else if(!strcmp(point->name,"EXP") && !strcmp(point->rnode->name,"AND")){
+		Operand lable1 = new_lable();
+		InterCodes code1,code2,code3;
+		code1 = translate_Cond(point,lable1,lable_false);
+		code2 = translate_Cond(point,lable_true,lable_false);
+		code3 = new_intercodes();
+		code3->code->kind = LABLE;
+		code3 = new_noop(code3,lable1);
+		code1 = combine(code1,code3);
+		code1 = combine(code1,code2);
+		return code1;
+
+	}
+	else if(!strcmp(point->name,"EXP") && !strcmp(point->rnode->name,"OR")){
+		Operand lable1 = new_lable();
+		InterCodes code1,code2,code3;
+		code1 = translate_Cond(point,lable_true,lable1);
+		code2 = translate_Cond(point,lable_true,lable_false);
+		code3 = new_intercodes();
+		code3->code->kind = LABLE;
+		code3 = new_noop(code3,lable1);
+		code1 = combine(code1,code3);
+		code1 = combine(code1,code2);
+		return code1;
+
+	}
+	else{
+		Operand t1,t2,op;
+		t1 = new_temp();
+		InterCodes code1,code2,code3;
+		code1 = translate_Exp(Exp,t1);
+		t2 = new_operand();
+		t2->kind = CONSTANT;
+		t2->u.value = 0;
+		op = new_operand();
+		op->kind = RELOP_;
+		op->u.relop = "!=";
+		code2 = new_if_go(t1,t2,lable_true,op);
+		code3 = new_intercodes();
+		code3->code->kind = GOTO;
+		code3 = new_noop(code3,lable_false);
+		code1 = combine(code1,code2);
+		code1 = combine(code1,code3);
+		return code1;
+	}
+
+
 
 
 }
@@ -254,21 +323,31 @@ InterCodes into_lable(Operand lable){
 
 InterCodes new_noop(InterCodes code, Operand result){
 	InterCodes p = code;
-	p->u.noop.result = result;
+	p->code->u.noop.result = result;
 	return p;
 }
 InterCodes new_sinop(InterCodes code, Operand result, Operand op){
 	InterCodes p = code;
-	p->u.sinop.result = result;
-	p->u.sinop.op = op;
+	p->code->u.sinop.result = result;
+	p->code->u.sinop.op = op;
 	return p;
 }
 InterCodes new_binop(InterCodes code, Operand result, Operand op1, Operand op2){
 	InterCodes p = code;
-	p->u.binop.result = result;
-	p->u.binop.op1 = op1;
-	p->u.binop.op2 = op2;
+	p->code->u.binop.result = result;
+	p->code->u.binop.op1 = op1;
+	p->code->u.binop.op2 = op2;
 	return p;
+}
+InterCodes new_if_go(Operand op1,Operand op2,Operand op3,Operand op){
+	InterCodes p = new_intercodes();
+	p->code->kind = IF_GOTO;
+	p->code->u.if_goto.op1 = op1;
+	p->code->u.if_goto.op2 = op2;
+	p->code->u.if_goto.op3 = op3;
+	p->code->u.if_goto.op = op;
+
+
 }
 
 
