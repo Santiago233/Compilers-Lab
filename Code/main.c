@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include<string.h>
 #include "node.h"
+#include "intercode.h"
 #define N 0x3fff
 int flag = 0;
 int scount = 0;
