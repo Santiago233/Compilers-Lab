@@ -25,7 +25,7 @@ typedef struct Operand_{
 
 
 typedef struct InterCode_{
-	enum{ASSIGN,ADD,SUB,MUL,DIVIDE,FUNCTION,LABEL,ADDR_TO,VALUE_TO,TO_VALUE,GOTO,IF_GOTO,RETURN_,DEC,ARG,CALL,PARAM,READ,WRITE}kind;
+	enum{ASSIGN,ADD,SUB,MUL,DIVIDE,FUNCTION,LABEL,ADDR_TO,VALUE_TO,TO_VALUE,GOTO,IF_GOTO,RETURN_,DEC,ARG,CALL,PARAM,READ,WRITE,EMPTY}kind;
 	union{
 		struct{Operand op1,op2,op3,op;}if_goto;	//if goto
 		struct{Operand right,left;}assign;	//useless
@@ -179,6 +179,9 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode->code->u.sinop.result = place;
 		expcode->code->u.sinop.op->kind = CONSTANT;
 		expcode->code->u.sinop.op->u.value = *(int*)&p->val;
+		if(place == NULL){
+			expcode->code->kind = EMPTY;
+		}
 		return expcode;
 	}else if(!strcmp(p->name, "ID") && p->rnode == NULL){
 		InterCodes expcode = new_intercodes();
@@ -188,6 +191,9 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode->code->u.sinop.result = place;
 		expcode->code->u.sinop.op->kind = VARIABLE;
 		expcode->code->u.sinop.op->u.var_no = lookup(p->val2);
+		if(place == NULL){
+			expcode->code->kind = EMPTY;
+		}
 		return expcode;
 	}else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "ASSIGNOP")){
 		Operand tmp = new_temp();
@@ -197,7 +203,8 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode2->code->u.sinop.result = new_operand();
 		//expcode2->code->u.sinop.op = new_operand();
 		expcode2->code->u.sinop.result->kind = VARIABLE;
-		expcode2->code->u.sinop.result->u.var_no = lookup(p->val2);
+		expcode2->code->u.sinop.result->u.var_no = lookup(p->childnode->val2);
+		//printf("%s\n", p->val2);
 		expcode2->code->u.sinop.op = tmp;
 		InterCodes expcode3 = new_intercodes();
 		expcode3->code->kind = ASSIGN;
@@ -205,7 +212,10 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode3->code->u.sinop.op = new_operand();
 		expcode3->code->u.sinop.result = place;
 		expcode3->code->u.sinop.op->kind = VARIABLE;
-		expcode3->code->u.sinop.op->u.var_no = lookup(p->val2);
+		expcode3->code->u.sinop.op->u.var_no = lookup(p->childnode->val2);
+		if(place == NULL){
+			expcode3->code->kind = EMPTY;
+		}
 		expcode2 = combine(expcode2, expcode3);
 		expcode1 = combine(expcode1, expcode2);
 		return expcode1;
@@ -230,6 +240,9 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode3->code->u.binop.result = place;
 		expcode3->code->u.binop.op1 = tmp1;
 		expcode3->code->u.binop.op2 = tmp2;
+		if(place == NULL){
+			expcode3->code->kind = EMPTY;
+		}
 		expcode1 = combine(expcode1, expcode2);
 		expcode1 = combine(expcode1, expcode3);
 		return expcode1;
@@ -252,6 +265,12 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode2_2->code->kind = ASSIGN;
 		InterCodes expcode2 = combine(expcode2_1, expcode2_2);
 		InterCodes expcode3 = into_label(label2);
+		if(place == NULL){
+			expcode0->code->kind = EMPTY;
+		}
+		if(place == NULL){
+			expcode2_2->code->kind = EMPTY;
+		}
 		expcode0 = combine(combine(combine(expcode0, expcode1), expcode2), expcode3);
 		return expcode0;
 	}else if(!strcmp(p->name, "ID") && !strcmp(p->rnode->rnode->name, "RP")){
@@ -267,6 +286,7 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 			op->u.funcname = name;
 			expcode = new_sinop(expcode, place, op);
 			expcode->code->kind = CALL;
+
 			return expcode;
 		}
 	}else if(!strcmp(p->name, "ID") && !strcmp(p->rnode->rnode->name, "Args")){
@@ -314,6 +334,7 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 InterCodes translate_Stmt(Node* Stmt){
 	Node* p = Stmt->childnode;
 	if(!strcmp(p->name, "Exp")){
+		//printf("000000\n");
 		return translate_Exp(p, NULL);
 	}else if(!strcmp(p->name, "CompSt")){
 		return translate_CompSt(p);
@@ -462,40 +483,60 @@ InterCodes translate_Args(Node* Args, ARG_LIST arglist){
 
 InterCodes translate_CompSt(Node* CompSt){
 	Node* point = CompSt->childnode;
-	InterCodes code1 = translate_DefList(point->rnode->rnode);
-	InterCodes code2 = translate_StmtList(point->rnode->rnode->rnode);
+	InterCodes code1 = translate_DefList(point->rnode);
+	InterCodes code2 = translate_StmtList(point->rnode->rnode);
+	//codeoutput(code2);
 	return combine(code1,code2);
 
 }
 InterCodes translate_StmtList(Node* StmtList){
 	Node* point = StmtList->childnode;
-	if(point->line == N){
-		return NULL;
+	if(point == NULL ||point->line == N){
+
+		InterCodes code1 = new_intercodes();
+		code1->code->kind = EMPTY;
+		return code1;
 	}
 	else if(!strcmp(point->name,"Stmt")){
 		InterCodes code1,code2;
-		code1 = translate_Stmt(point->rnode);
-		code2 = translate_StmtList(point->rnode->rnode);
+		code1 = translate_Stmt(point);
+		//codeoutput(code1);
+		code2 = translate_StmtList(point->rnode);//codeoutput(code2);
 		return combine(code1,code2);
 	}
 
 }
 InterCodes translate_FunDec(Node* FunDec){
 	Node* point = FunDec->childnode;
-	if(!strcmp(point->rnode->rnode->rnode->name,"RP")){
+
+	if(!strcmp(point->rnode->rnode->name,"RP")){
+		//printf("%s\n",point->rnode->rnode->name);
 		InterCodes code1 = new_intercodes();
 		code1->code->kind = FUNCTION;
 		Operand result = new_operand();
 		result->kind = FUNCTION_NAME;
 		result->u.funcname = point->val2;
 		code1->code->u.noop.result = result;
+		//codeoutput(code1);
 		return code1;
+	}
+	else{
+		InterCodes code2;
+		InterCodes code1 = new_intercodes();
+		code1->code->kind = FUNCTION;
+		Operand result = new_operand();
+		result->kind = FUNCTION_NAME;
+		result->u.funcname = point->val2;
+		code1->code->u.noop.result = result;
+		code2 = translate_VarList(point->rnode->rnode);
+		return combine(code1,code2);
+
 	}
 
 }
 InterCodes translate_VarList(Node* VarList){
 	Node* point = VarList->childnode;
-    if(point->rnode->rnode == NULL){
+    if(point == NULL || point->rnode->rnode == NULL){
         InterCodes code1 = translate_ParamDec(point);
     }
     else if(point->rnode->rnode != NULL){
@@ -539,20 +580,27 @@ InterCodes translate_VarDec(Node* s,Node* VarDec){
 }
 InterCodes translate_DefList(Node* DefList){
 	Node* point = DefList->childnode;
-	if(point->line == N){
-		return NULL;
+	if(point == NULL ||point->line == N){
+		//printf("0001\n");
+		InterCodes code1 = new_intercodes();
+		code1->code->kind = EMPTY;
+		return code1;
 	}
 	else if(!strcmp(point->name,"Def")){
 		InterCodes code1,code2;
-		code1 = translate_Def(point);
+		code1 = translate_Def(point);//codeoutput(code2);
+		//printf("0000\n");
 		code2 = translate_DefList(point->rnode);
+		
 		return combine(code1,code2);
 	}
 }
 InterCodes translate_Def(Node* Def){
 	Node* point = Def->childnode;
-	if(!strcmp(point->name,"Def")){
+	if(!strcmp(point->name,"Specifier")){
 		InterCodes code1 = translate_DecList(point,point->rnode);
+		//printf("00000\n");
+		
 		return code1;
 	}
 }
@@ -563,14 +611,17 @@ InterCodes translate_DecList(Node* s,Node* DecList){
 	}
 	else{
 		InterCodes code1,code2;
+
 		code1 = translate_Dec(s,point);
 		code2 = translate_DecList(s,point->rnode->rnode);
+		//codeoutput(code1);
 		return combine(code1,code2);
 	}
 }
 InterCodes translate_Dec(Node* s,Node* Dec){
 	Node* point = Dec->childnode;
 	if(point->rnode != NULL){
+
 		InterCodes code1,code2;
 		Operand t1 = new_temp();
 		code1 = translate_Exp(point->rnode->rnode,t1);
@@ -580,20 +631,28 @@ InterCodes translate_Dec(Node* s,Node* Dec){
 		//Operand result = new_operand();
 		result->kind = VARIABLE;
 		result->u.var_no = lookup(point->childnode->name);
+		//printf("%s\n", point->childnode->name);
 		code2->code->u.sinop.result = result;
 		code2->code->u.sinop.op = t1;
+		//codeoutput(combine(code1,code2));
 		return combine(code1,code2);
 
+	}
+	else{
+		InterCodes code1 = new_intercodes();
+		code1->code->kind = EMPTY;
+		return code1;
 	}
 
 }
 InterCodes translate_Program(Node* Program){
 	Node* point = Program->childnode;
-	return translate_ExtDefList(point);
+	InterCodes code1 = translate_ExtDefList(point);
+	return code1;
 }
 InterCodes translate_ExtDefList(Node* ExtDefList){
 	Node* point = ExtDefList->childnode;
-	if(point->line == N){
+	if(point == NULL || point->line == N){
 		return NULL;
 	}
 	else if(!strcmp(point->name,"ExtDef")){
@@ -605,7 +664,7 @@ InterCodes translate_ExtDefList(Node* ExtDefList){
 }
 InterCodes translate_ExtDef(Node* ExtDef){
 	Node* point = ExtDef->childnode;
-	if(!strcmp(point->rnode->rnode->name,"FunDec")){
+	if(!strcmp(point->rnode->name,"FunDec")){
 		InterCodes code1,code2;
 		code1 = translate_FunDec(point->rnode);
 		code2 = translate_CompSt(point->rnode->rnode);
@@ -616,15 +675,34 @@ InterCodes translate_ExtDef(Node* ExtDef){
 
 
 InterCodes combine(InterCodes code1, InterCodes code2){   //like as insert one code2;
-	InterCodes temp1 = code1->next;
+	//InterCodes temp1 = code1->next;
 	//InterCodes temp2 = code2->prev;
 	if(code2 == NULL)
 		return code1;
-	code1->next = code2;
+	/*code1->next = code2;
 	code2->prev = code1;
 	code2->next = temp1;
 	temp1->prev = code2;
-	return code1;
+	return code1;*/
+	InterCodes p = code1;
+	InterCodes p1 = code2;
+	//codeoutput(code1);
+	//codeoutput(code2);
+	while(p->next){p = p->next;}
+	/*if(p1->prev){
+		p1 = p1->prev;
+		p1->next = code1;
+		p->next = code2;
+		code1->prev = p1;
+		code2->prev = p;
+		InterCodes q = code2;
+		while(q->prev){q = q->prev;}
+		return q;
+	}else{*/
+		p->next = code2;
+		code2->prev = p;
+		return code1;
+	//}
 }
 
 InterCodes into_label(Operand label){
@@ -666,6 +744,7 @@ InterCodes new_if_go(Operand op1,Operand op2,Operand op3,Operand op){
 
 void codeoutput(InterCodes srccode){
 	//enum{ASSIGN,ADD,SUB,MUL,DIVIDE,FUNCTION,LABEL,ADDR_TO,VALUE_TO,TO_VALUE,GOTO,IF_GOTO,RETURN_,DEC,ARG,CALL,PARAM,READ,WRITE}kind;
+
 	InterCodes tcode = srccode;
 	while(tcode != NULL){
 		switch (tcode->code->kind){
@@ -809,6 +888,9 @@ void codeoutput(InterCodes srccode){
 				printf("WRITE ");
 				opeoutput(tcode->code->u.noop.result);
 				printf("\n");
+				break;
+			}
+			case EMPTY:{
 				break;
 			}
 
