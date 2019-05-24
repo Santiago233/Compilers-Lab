@@ -18,11 +18,18 @@ Semantic Analysis:
 (3)gcc main.c syntax.tab.c -lfl -ly -o parser
 (4)./parser test.cmm
 
+Translation Work:
+(1)bison -d syntax.y
+(2)flex lexical.l
+(3)gcc main.c syntax.tab.c -lfl -ly -o parser
+(4)./parser test.cmm result.ir
 
 Tips:
 
 (1)Due to the terrible grammar of C--, some right instructions can be reported as Lexical errors
 
-(2)some Gramma errors cannot be recovered by the authors
+(2)Some Gramma errors cannot be recovered by the authors
 
-(3)some Semantic errors might be reported twice in different ways due to the execution order in function 'Main' && the storage of structures
+(3)Some Semantic errors might be reported twice in different ways due to the execution order in function 'Main' && the storage of structures
+
+(4)Structure cannot be translated by the authors

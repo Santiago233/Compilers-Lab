@@ -808,6 +808,12 @@ InterCodes translate_ParamDec(Node* ParamDec){
         return code1;
 
     }
+    else if (!strcmp(point->childnode->name,"StructSpecifier"))
+    {
+    		printf("warning!!!!!!!:   wo dont do choose_branch_3\n");
+    		exit(0);
+    	/* code */
+    }
     else{
     		Operand result = new_operand();
         	result->kind = VARIABLE;
