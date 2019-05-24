@@ -14,18 +14,19 @@ typedef struct member_* member;
 //typedef struct func_* func;
 
 typedef struct Operand_{
-	enum {VARIABLE,CONSTANT,TEMPORARY,ADDRESS,FUNCTION_NAME,LABEL_,RELOP_}kind;
+	enum {VARIABLE,CONSTANT,TEMPORARY,ADDRESS,FUNCTION_NAME,LABEL_,RELOP_,VALUE}kind;
 	union{
 		int var_no;
 		int value;
 		char* funcname;
 		char* relop;
 	}u;
+	int size;
 }Operand_;
 
 
 typedef struct InterCode_{
-	enum{ASSIGN,ADD,SUB,MUL,DIVIDE,FUNCTION,LABEL,ADDR_TO,VALUE_TO,TO_VALUE,GOTO,IF_GOTO,RETURN_,DEC,ARG,CALL,PARAM,READ,WRITE,EMPTY}kind;
+	enum{ASSIGN,ADD,SUB,MUL,DIVIDE,FUNCTION,LABEL,ADDR_TO,VALUE_TO,TO_VALUE,GOTO,IF_GOTO,RETURN_,DEC,ARG,CALL,PARAM,READ,WRITE,EMPTY,ADD_}kind;
 	union{
 		struct{Operand op1,op2,op3,op;}if_goto;	//if goto
 		struct{Operand right,left;}assign;	//useless
@@ -173,6 +174,7 @@ Operand get_relop(Node* relop){
 
 InterCodes translate_Exp(Node* Exp, Operand place){
 	Node* p = Exp->childnode;
+	//generate(p,0);
 	if(!strcmp(p->name, "INT")){
 		InterCodes expcode = new_intercodes();
 		expcode->code->kind = ASSIGN;
@@ -199,32 +201,77 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 			expcode->code->kind = EMPTY;
 		}
 		return expcode;
-	}else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "ASSIGNOP")){
-		Operand tmp = new_temp();
-		InterCodes expcode1 = translate_Exp(p->rnode->rnode, tmp);
-		InterCodes expcode2 = new_intercodes();
-		expcode2->code->kind = ASSIGN;
-		expcode2->code->u.sinop.result = new_operand();
+	}
+	else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "ASSIGNOP") && strcmp(p->childnode->name, "ID")){
+		Operand temp1 = new_temp();
+		//Operand temp2 = new_temp();
+		Operand temp3 = new_temp();
+		InterCodes expcode1 = translate_Exp(p, temp1);
+		//codeoutput(expcode1);
+		//printf("%s\n", p->childnode->name);
+
+		/*InterCodes expcode2 = new_intercodes();
+		expcode2->code->kind = ADD;
+		expcode2->code->u.binop.result = temp2;
+		Operand code2_op1 = new_operand();
 		//expcode2->code->u.sinop.op = new_operand();
-		expcode2->code->u.sinop.result->kind = VARIABLE;
-		expcode2->code->u.sinop.result->u.var_no = lookup(p->childnode->val2);
+		code2_op1->kind = ADDRESS;
+		code2_op1->u.var_no = lookup(p->childnode->val2);
+		code2_op1->size = 1;
+		expcode2 = new_binop(expcode2, temp2, code2_op1, temp1);*/
+
 		//generate(p,0);
 		//printf("%s\n", p->childnode->val2);
-		expcode2->code->u.sinop.op = tmp;
-		InterCodes expcode3 = new_intercodes();
-		expcode3->code->kind = ASSIGN;
-		//expcode3->code->u.sinop.result = new_operand();
-		expcode3->code->u.sinop.op = expcode2->code->u.sinop.result;
-		//expcode3->code->u.sinop.result = place;
-		//expcode3->code->u.sinop.op->kind = VARIABLE;
-		//expcode3->code->u.sinop.op->u.var_no = lookup(p->childnode->val2);
-		if(place == NULL){
-			expcode3->code->kind = EMPTY;
-		}
 
-		expcode2 = combine(expcode2, expcode3);
-		expcode1 = combine(expcode1, expcode2);
+
+		//codeoutput(expcode2);
+		InterCodes expcode3 = translate_Exp(p->rnode->rnode,temp3);
+		
+		InterCodes code4 = new_intercodes();
+		code4->code->kind = TO_VALUE;
+		code4->code->u.sinop.result = temp1;
+		code4->code->u.sinop.op = temp3;
+
+
+		//if(place == NULL){
+		//	expcode3->code->kind = EMPTY;
+		//}
+		expcode3 = combine(expcode3,code4);
+		//expcode2 = combine(expcode2, expcode3);
+		expcode1 = combine(expcode1, expcode3);
+		//codeoutput(expcode1);
 		return expcode1;
+	}else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "ASSIGNOP")){
+		
+			Operand tmp = new_temp();
+			InterCodes expcode1 = translate_Exp(p->rnode->rnode, tmp);
+			InterCodes expcode2 = new_intercodes();
+			expcode2->code->kind = ASSIGN;
+			expcode2->code->u.sinop.result = new_operand();
+			//expcode2->code->u.sinop.op = new_operand();
+			expcode2->code->u.sinop.result->kind = VARIABLE;
+			expcode2->code->u.sinop.result->u.var_no = lookup(p->childnode->val2);
+			//generate(p,0);
+			//printf("%s\n", p->childnode->val2);
+
+			expcode2->code->u.sinop.op = tmp;
+			//codeoutput(expcode2);
+			InterCodes expcode3 = new_intercodes();
+			expcode3->code->kind = ASSIGN;
+			//expcode3->code->u.sinop.result = new_operand();
+			expcode3->code->u.sinop.op = expcode2->code->u.sinop.result;
+			//expcode3->code->u.sinop.result = place;
+			//expcode3->code->u.sinop.op->kind = VARIABLE;
+			//expcode3->code->u.sinop.op->u.var_no = lookup(p->childnode->val2);
+			if(place == NULL){
+				expcode3->code->kind = EMPTY;
+			}
+
+			expcode2 = combine(expcode2, expcode3);
+			expcode1 = combine(expcode1, expcode2);
+			//codeoutput(expcode1);
+			return expcode1;
+		
 	}
 	else if(!strcmp(p->name, "LP") && !strcmp(p->rnode->name, "Exp")){
 		InterCodes code1;
@@ -279,8 +326,9 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode1 = combine(expcode1, expcode2);
 		expcode1 = combine(expcode1, expcode3);
 		return expcode1;
-	}else if(!strmcp(p->name, "Exp") && !strmcp(p->rnode->name, "LB")){
-		Node* q = p->rnode->rnode->childnode->childnode;
+	}else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "LB")){
+		//printf("00000\n");
+		/*Node* q = p->rnode->rnode->childnode->childnode;
 		if(*(int*)&q->val != 0){
 			InterCodes expcode1 = new_intercodes();
 			Operand op1 = new_operand();
@@ -306,7 +354,63 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 			expcode = new_sinop(expcode, result, op);
 			expcode->code->kind = ADDR_TO;
 			return expcode;
+		}*/
+		//printf("0000\n");
+		InterCodes expcode1 = new_intercodes();
+		Operand op1 = new_operand();
+		Operand op2 = new_operand();
+		Operand temp1 = new_temp();
+		//op1->kind = ADDRESS;
+		//printf("%s\n",p->rnode->rnode->childnode->name);
+		if(!strcmp(p->rnode->rnode->childnode->name,"ID")){
+			//printf("00000\n");
+			op2->kind = VARIABLE;
+			op2->u.var_no = lookup(p->rnode->rnode->childnode->val2);
 		}
+		else if(!strcmp(p->rnode->rnode->childnode->name,"INT")){
+
+			op2->kind = CONSTANT;
+			int value = *(int*)&p->rnode->rnode->childnode->val;
+			op2->u.value = value;
+		}
+		op1->kind = VARIABLE;
+		op1->u.var_no = lookup(p->childnode->val2);
+		//printf("%s\n", p->childnode->val2);
+		op1->size = 1;
+		
+		op1->kind = CONSTANT;
+		op1->u.value = 4;
+		expcode1->code->kind = MUL;
+		expcode1->code->u.binop.result = temp1;
+		expcode1->code->u.binop.op1 = op2;
+		expcode1->code->u.binop.op2 = op1;
+
+		//Operand temp2 = new_temp();
+		InterCodes expcode2 = new_intercodes();
+		expcode2->code->kind = ADD;
+		//expcode2->code->u.binop.result = temp2;
+		Operand code2_op1 = new_operand();
+		//expcode2->code->u.sinop.op = new_operand();
+		code2_op1->kind = ADDRESS;
+		code2_op1->u.var_no = lookup(p->childnode->val2);
+		code2_op1->size = 1;
+		if(place->kind == VARIABLE){
+			//place->kind = VALUE;
+			place->size = 1;
+		}
+		else if(place->kind = TEMPORARY){
+			//place->kind = VALUE;
+			place->size = 0;
+		}
+		
+		expcode2 = new_binop(expcode2, place, code2_op1, temp1);
+
+
+
+
+		return combine(expcode1,expcode2);
+
+
 	}else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "DOT")){
 	}else if(!strcmp(p->name, "Exp") || !strcmp(p->name, "NOT")){
 		Operand label1 = new_label();
@@ -714,6 +818,24 @@ InterCodes translate_ParamDec(Node* ParamDec){
 }
 InterCodes translate_VarDec(Node* s,Node* VarDec){
 	Node* point = VarDec->childnode;
+	if(!strcmp(s->childnode->name,"StructSpecifier" )){
+
+		
+	}
+	else{
+		//
+		InterCodes code1 = new_intercodes();
+		code1->code->kind = DEC;
+		Operand result = new_operand();
+		result->kind = VARIABLE;
+		result->u.var_no = lookup(point->childnode->val2);
+		//printf("%s\n", point->rnode->rnode->name);
+		int temp_no = *(int*)&point->rnode->rnode->val;
+		result->size = 4 * temp_no;
+		code1->code->u.noop.result = result;
+		//codeoutput(code1);
+		return code1;
+	}
 	
 
 }
@@ -760,27 +882,34 @@ InterCodes translate_DecList(Node* s,Node* DecList){
 InterCodes translate_Dec(Node* s,Node* Dec){
 	Node* point = Dec->childnode;
 	if(point->rnode != NULL){
-
-		InterCodes code1,code2;
-		Operand t1 = new_temp();
-		code1 = translate_Exp(point->rnode->rnode,t1);
-		Operand result = new_operand();
-		code2 = new_intercodes();
-		code2->code->kind = ASSIGN;
-		//Operand result = new_operand();
-		result->kind = VARIABLE;
-		result->u.var_no = lookup(point->childnode->val2);
-		//printf("%s\n", point->childnode->name);
-		code2->code->u.sinop.result = result;
-		code2->code->u.sinop.op = t1;
-		//codeoutput(combine(code1,code2));
-		return combine(code1,code2);
-
+		//if(!strcmp(point->rnode->childnode->name , "ID")){
+			InterCodes code1,code2;
+			Operand t1 = new_temp();
+			code1 = translate_Exp(point->rnode->rnode,t1);
+			Operand result = new_operand();
+			code2 = new_intercodes();
+			code2->code->kind = ASSIGN;
+			//Operand result = new_operand();
+			result->kind = VARIABLE;
+			result->u.var_no = lookup(point->childnode->val2);
+			//printf("%s\n", point->childnode->name);
+			code2->code->u.sinop.result = result;
+			code2->code->u.sinop.op = t1;
+			//codeoutput(combine(code1,code2));
+			return combine(code1,code2);
+		//}
+		
 	}
 	else{
-		InterCodes code1 = new_intercodes();
-		code1->code->kind = EMPTY;
-		return code1;
+		if(!strcmp(point->childnode->name , "ID")){
+			InterCodes code1 = new_intercodes();
+			code1->code->kind = EMPTY;
+			return code1;
+		}
+		else if(!strcmp(point->childnode->name , "VarDec")){
+			
+			return translate_VarDec(s,point);
+		}
 	}
 
 }
@@ -994,10 +1123,10 @@ void codeoutput(InterCodes srccode){
 			case DEC:{
 				//TODO: array.size;
 				//x = tcode->code->u.noop.result;
-				int size = 4;//   * x;   //not true
+				int size = tcode->code->u.noop.result->size;//   * x;   //not true
 				printf("DEC ");
 				opeoutput(tcode->code->u.noop.result);
-				printf("%d\n", size);
+				printf(" %d\n", size);
 				break;
 			}
 			case ARG:{
@@ -1034,6 +1163,21 @@ void codeoutput(InterCodes srccode){
 			case EMPTY:{
 				break;
 			}
+			case ADD_:{
+				printf("&");
+				opeoutput(tcode->code->u.binop.result);
+				printf(" := ");
+				opeoutput(tcode->code->u.binop.op1);
+				printf(" + ");
+				opeoutput(tcode->code->u.binop.op2);
+				printf("\n");
+				break;
+
+			}
+			default :{
+			printf("error in codeoutput\n");
+			break;
+			}
 
 		}
 		tcode = tcode->next;
@@ -1068,10 +1212,34 @@ void opeoutput(Operand op){
 			//???
 
 			//printf("%d", op->u.var_no);
+			if(op->size == 1){
+				printf("&v%d", op->u.var_no);
+				break;
+			}
+			else{
+				printf("&t%d", op->u.var_no);
+				break;
+			}
 			break;
 		}
 		case RELOP_:{
 			printf("%s", op->u.relop);
+			break;
+		}
+		case VALUE:{
+			if(op->size == 1){
+				printf("*v%d", op->u.var_no);
+				break;
+			}
+			else{
+				printf("*t%d", op->u.var_no);
+				break;
+			}
+			break;
+
+		}
+		default :{
+			printf("error in opoutput\n");
 			break;
 		}
 	}
