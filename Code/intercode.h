@@ -22,6 +22,7 @@ typedef struct Operand_{
 		char* relop;
 	}u;
 	int size;
+
 }Operand_;
 
 
@@ -34,6 +35,7 @@ typedef struct InterCode_{
 		struct{Operand result,op;}sinop;	//monocular operation && assign
 		struct{Operand result;}noop;	//nop operation
 	}u;
+	int is_addr;
 }InterCode_;
 
 typedef struct member_{
@@ -112,6 +114,7 @@ InterCodes new_intercodes(){
 	InterCodes p = (InterCodes)malloc(sizeof(struct InterCodes_));
 	InterCode p1 = (InterCode)malloc(sizeof(struct InterCode_));
 	p->code = p1;
+	p->code->is_addr = 0;
 	p->prev = NULL;
 	p->next = NULL;
 	return p;
@@ -228,7 +231,7 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		InterCodes expcode3 = translate_Exp(p->rnode->rnode,temp3);
 		
 		InterCodes code4 = new_intercodes();
-		code4->code->kind = TO_VALUE;
+		code4->code->kind = ASSIGN;
 		code4->code->u.sinop.result = temp1;
 		code4->code->u.sinop.op = temp3;
 
@@ -395,14 +398,14 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		code2_op1->u.var_no = lookup(p->childnode->val2);
 		code2_op1->size = 1;
 		if(place->kind == VARIABLE){
-			//place->kind = VALUE;
+			place->kind = VALUE;
 			place->size = 1;
 		}
 		else if(place->kind = TEMPORARY){
-			//place->kind = VALUE;
+			place->kind = VALUE;
 			place->size = 0;
 		}
-		
+		expcode2->code->is_addr = 1;
 		expcode2 = new_binop(expcode2, place, code2_op1, temp1);
 
 
@@ -1020,103 +1023,103 @@ void codeoutput(InterCodes srccode){
 		switch (tcode->code->kind){
 			case FUNCTION:{
 				printf("FUNCTION ");
-				opeoutput(tcode->code->u.noop.result);
+				opeoutput(tcode->code->u.noop.result,tcode->code->is_addr);
 				printf(" :\n");
 				break;
 			}
 			case LABEL:{
 				printf("LABEL ");
-				opeoutput(tcode->code->u.noop.result);
+				opeoutput(tcode->code->u.noop.result),tcode->code->is_addr;
 				printf(" :\n");
 				break;
 			}
 			case RETURN_:{
 				printf("RETURN ");
-				opeoutput(tcode->code->u.noop.result);
+				opeoutput(tcode->code->u.noop.result,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case ASSIGN:{
-				opeoutput(tcode->code->u.sinop.result);
+				opeoutput(tcode->code->u.sinop.result,tcode->code->is_addr);
 				printf(" := ");
-				opeoutput(tcode->code->u.sinop.op);
+				opeoutput(tcode->code->u.sinop.op,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case SUB:{
-				opeoutput(tcode->code->u.binop.result);
+				opeoutput(tcode->code->u.binop.result,tcode->code->is_addr);
 				printf(" := ");
-				opeoutput(tcode->code->u.binop.op1);
+				opeoutput(tcode->code->u.binop.op1,tcode->code->is_addr);
 				printf(" - ");
-				opeoutput(tcode->code->u.binop.op2);
+				opeoutput(tcode->code->u.binop.op2,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case MUL:{
-				opeoutput(tcode->code->u.binop.result);
+				opeoutput(tcode->code->u.binop.result,tcode->code->is_addr);
 				printf(" := ");
-				opeoutput(tcode->code->u.binop.op1);
+				opeoutput(tcode->code->u.binop.op1,tcode->code->is_addr);
 				printf(" * ");
-				opeoutput(tcode->code->u.binop.op2);
+				opeoutput(tcode->code->u.binop.op2,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case DIVIDE:{
-				opeoutput(tcode->code->u.binop.result);
+				opeoutput(tcode->code->u.binop.result,tcode->code->is_addr);
 				printf(" := ");
-				opeoutput(tcode->code->u.binop.op1);
+				opeoutput(tcode->code->u.binop.op1,tcode->code->is_addr);
 				printf(" / ");
-				opeoutput(tcode->code->u.binop.op2);
+				opeoutput(tcode->code->u.binop.op2,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case ADD:{
-				opeoutput(tcode->code->u.binop.result);
+				opeoutput(tcode->code->u.binop.result,tcode->code->is_addr);
 				printf(" := ");
-				opeoutput(tcode->code->u.binop.op1);
+				opeoutput(tcode->code->u.binop.op1,tcode->code->is_addr);
 				printf(" + ");
-				opeoutput(tcode->code->u.binop.op2);
+				opeoutput(tcode->code->u.binop.op2,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case ADDR_TO:{
-				opeoutput(tcode->code->u.sinop.result);
+				opeoutput(tcode->code->u.sinop.result,tcode->code->is_addr);
 				printf(" := &");
-				opeoutput(tcode->code->u.sinop.op);
+				opeoutput(tcode->code->u.sinop.op,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case VALUE_TO:{
-				opeoutput(tcode->code->u.sinop.result);
+				opeoutput(tcode->code->u.sinop.result,tcode->code->is_addr);
 				printf(" := *");
-				opeoutput(tcode->code->u.sinop.op);
+				opeoutput(tcode->code->u.sinop.op,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case TO_VALUE:{
 				printf("*");
-				opeoutput(tcode->code->u.sinop.result);
+				opeoutput(tcode->code->u.sinop.result,tcode->code->is_addr);
 				printf(" := ");
-				opeoutput(tcode->code->u.sinop.op);
+				opeoutput(tcode->code->u.sinop.op,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case GOTO:{
 				printf("GOTO ");
-				opeoutput(tcode->code->u.noop.result);
+				opeoutput(tcode->code->u.noop.result,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case IF_GOTO:{
 				printf("IF ");
-				opeoutput(tcode->code->u.if_goto.op1);
+				opeoutput(tcode->code->u.if_goto.op1,tcode->code->is_addr);
 				printf(" ");
-				opeoutput(tcode->code->u.if_goto.op);
+				opeoutput(tcode->code->u.if_goto.op,tcode->code->is_addr);
 				//todo:relop
 				printf(" ");
-				opeoutput(tcode->code->u.if_goto.op2);
+				opeoutput(tcode->code->u.if_goto.op2,tcode->code->is_addr);
 				printf(" GOTO ");
-				opeoutput(tcode->code->u.if_goto.op3);
+				opeoutput(tcode->code->u.if_goto.op3,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
@@ -1125,38 +1128,38 @@ void codeoutput(InterCodes srccode){
 				//x = tcode->code->u.noop.result;
 				int size = tcode->code->u.noop.result->size;//   * x;   //not true
 				printf("DEC ");
-				opeoutput(tcode->code->u.noop.result);
+				opeoutput(tcode->code->u.noop.result,tcode->code->is_addr);
 				printf(" %d\n", size);
 				break;
 			}
 			case ARG:{
 				printf("ARG ");
-				opeoutput(tcode->code->u.noop.result);
+				opeoutput(tcode->code->u.noop.result,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case CALL:{
-				opeoutput(tcode->code->u.sinop.result);
+				opeoutput(tcode->code->u.sinop.result,tcode->code->is_addr);
 				printf(" := CALL ");
-				opeoutput(tcode->code->u.sinop.op);
+				opeoutput(tcode->code->u.sinop.op,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case PARAM:{
 				printf("PARAM ");
-				opeoutput(tcode->code->u.noop.result);
+				opeoutput(tcode->code->u.noop.result,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case READ:{     //noop
 				printf("READ ");
-				opeoutput(tcode->code->u.noop.result);
+				opeoutput(tcode->code->u.noop.result,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
 			case WRITE:{    //noop
 				printf("WRITE ");
-				opeoutput(tcode->code->u.noop.result);
+				opeoutput(tcode->code->u.noop.result,tcode->code->is_addr);
 				printf("\n");
 				break;
 			}
@@ -1165,11 +1168,11 @@ void codeoutput(InterCodes srccode){
 			}
 			case ADD_:{
 				printf("&");
-				opeoutput(tcode->code->u.binop.result);
+				opeoutput(tcode->code->u.binop.result,tcode->code->is_addr);
 				printf(" := ");
-				opeoutput(tcode->code->u.binop.op1);
+				opeoutput(tcode->code->u.binop.op1,tcode->code->is_addr);
 				printf(" + ");
-				opeoutput(tcode->code->u.binop.op2);
+				opeoutput(tcode->code->u.binop.op2,tcode->code->is_addr);
 				printf("\n");
 				break;
 
@@ -1185,7 +1188,7 @@ void codeoutput(InterCodes srccode){
 	}
 }
 
-void opeoutput(Operand op){
+void opeoutput(Operand op, int addr){
 	//enum {VARIABLE,CONSTANT,TEMPORARY,ADDRESS,FUNCTION_NAME,label_}kind;
 	switch(op->kind){
 		case FUNCTION_NAME:{
@@ -1227,15 +1230,30 @@ void opeoutput(Operand op){
 			break;
 		}
 		case VALUE:{
-			if(op->size == 1){
+			if(addr == 1){
+				if(op->size == 1){
+					printf("v%d", op->u.var_no);
+					break;
+					}
+				else{
+					printf("t%d", op->u.var_no);
+					break;
+				}
+				break;
+			}
+			else{
+				if(op->size == 1){
 				printf("*v%d", op->u.var_no);
 				break;
 			}
 			else{
+
 				printf("*t%d", op->u.var_no);
 				break;
 			}
-			break;
+
+			}
+
 
 		}
 		default :{
