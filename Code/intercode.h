@@ -49,7 +49,7 @@ typedef struct member_{
 member vlist = NULL;
 
 typedef struct InterCodes_ { InterCode code; InterCodes prev, next;}InterCodes_;
-typedef struct ARG_LIST_ { Operand arg;int num;ARG_LIST next;}ARG_LIST_;
+typedef struct ARG_LIST_ { Operand arg;int num;ARG_LIST next;ARG_LIST prev;}ARG_LIST_;
 
 
 //Varibles
@@ -140,7 +140,7 @@ Operand new_operand(){
 Operand get_relop(Node* relop){
 	Operand p = new_operand();
 	p->kind = RELOP_;
-	//printf("%s\n", relop->name);
+	
 	if(!strcmp(relop->name,"RELOP_DAYU")){
 			p->u.relop = ">";
 			
@@ -156,7 +156,7 @@ Operand get_relop(Node* relop){
 	else if(!strcmp(relop->name, "RELOP_XIAOYUDENGYU")){
 			p->u.relop = "<=";
 			}
-	else if(!strcmp(relop->name, " RELOP_LIANDENG")){
+	else if(!strcmp(relop->name, "RELOP_LIANDENG")){
 			p->u.relop = "==";
 			
 		}
@@ -165,6 +165,7 @@ Operand get_relop(Node* relop){
 			
 		}
 	else{
+		printf("%s\n", relop->name);
 		printf("error in get_relop\n");
 	}
 	return p;
@@ -222,6 +223,14 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode1 = combine(expcode1, expcode2);
 		return expcode1;
 	}
+	else if(!strcmp(p->name, "LP") && !strcmp(p->rnode->name, "Exp")){
+		InterCodes code1;
+		if(place == NULL){
+			code1->code->kind = EMPTY;
+		}
+		return translate_Exp(p->rnode,place);
+
+	}
 	else if(!strcmp(p->name, "MINUS") && !strcmp(p->rnode->name, "Exp")){
 		InterCodes code1,code2;
 		Operand t1 = new_temp();
@@ -254,6 +263,7 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		}else{
 			expcode3->code->kind = DIVIDE;
 		}
+
 		//expcode3->code->u.binop.result = new_operand();
 		//expcode3->code->u.binop.op1 = new_operand();
 		//expcode3->code->u.binop.op2 = new_operand();
@@ -302,7 +312,7 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 			return expcode;
 		}else{
 			Operand op = new_operand();
-			op->kind = FUNCTION;
+			op->kind = FUNCTION_NAME;
 			op->u.funcname = name;
 			expcode = new_sinop(expcode, place, op);
 			expcode->code->kind = CALL;
@@ -314,6 +324,7 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		ARG_LIST arglist = (ARG_LIST)malloc(sizeof(struct ARG_LIST_));
 		arglist->next = NULL;
 		arglist->arg = NULL;
+		arglist->prev = NULL;
 		InterCodes expcode1 = translate_Args(p->rnode->rnode, arglist);
 		//generate(p->rnode->rnode,0);
 		if(!strcmp(name, "write")){
@@ -326,23 +337,35 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 			return combine(expcode1, expcode2);
 		}else{
 			ARG_LIST q = arglist;
+			while(q->prev != NULL){
+				q = q->prev;
+
+			}
 			Operand op = new_operand();
-			op->kind = VARIABLE;
+			op->kind = TEMPORARY;
 			op->u.var_no = q->arg->u.var_no;
 			InterCodes expcode2 = new_intercodes();
 			expcode2 = new_noop(expcode2, op);
 			expcode2->code->kind = ARG;
+
 			q = q->next;
-			while(q){
+			
+
+			while(q != NULL){
+
 				Operand op_ = new_operand();
-				op_->kind = VARIABLE;
-				op->u.var_no = q->arg->u.var_no;
-				expcode2 = new_noop(expcode2, op);
-				expcode2->code->kind = ARG;
+				op_->kind = TEMPORARY;
+				op_->u.var_no = q->arg->u.var_no;
+				InterCodes code4 = new_intercodes();
+				code4 = new_noop(code4, op_);
+				code4->code->kind = ARG;
+				//codeoutput(code4);
+				expcode2 = combine(expcode2,code4);
 				q = q->next;
 			}
+			//codeoutput(expcode2);
 			Operand op_ = new_operand();
-			op_->kind = FUNCTION;
+			op_->kind = FUNCTION_NAME;
 			op_->u.funcname = name;
 			InterCodes expcode3 = new_intercodes();
 			expcode3 = new_sinop(expcode3, place, op_);
@@ -350,6 +373,7 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 			return combine(combine(expcode1, expcode2), expcode3);
 		}
 	}else{
+		printf("%s %s\n", p->name, p->rnode->name);
 		printf("error in translate_Exp\n");
 	}
 }
@@ -366,10 +390,15 @@ InterCodes translate_Stmt(Node* Stmt){
 		return translate_CompSt(p);
 	}else if(!strcmp(p->name, "RETURN")){
 		Operand tmp = new_temp();
+		//printf("00000\n");
 		InterCodes expcode1 = translate_Exp(p->rnode, tmp);
+		//printf("%s\n", p->rnode->name);
+
 		InterCodes expcode2 = new_intercodes();
+
 		expcode2 = new_noop(expcode2, tmp);
 		expcode2->code->kind = RETURN_;
+		//codeoutput(expcode2);
 		return combine(expcode1, expcode2);
 	}else if(!strcmp(p->name, "IF")){
 
@@ -377,20 +406,24 @@ InterCodes translate_Stmt(Node* Stmt){
 			
 			Operand label1 = new_label();
 			Operand label2 = new_label();
-			InterCodes expcode1 = translate_Cond(p->rnode->rnode, label1, label2);
+
+			InterCodes expcode1 = translate_Cond(p->rnode->rnode, label1, label2);//codeoutput(expcode1);
 			InterCodes expcode2 = translate_Stmt(p->rnode->rnode->rnode->rnode);
 			InterCodes expcode_1 = into_label(label1);
 			InterCodes expcode_2 = into_label(label2);
-			//codeoutput(expcode_1);
+			
 			return combine(combine(combine(expcode1, expcode_1), expcode2), expcode_2);
 		}else{
 			Operand label1 = new_label();
 			Operand label2 = new_label();
-			Operand label3 = new_label();
+			Operand label3 = new_label();//printf("00000\n");
 			InterCodes expcode1 = translate_Cond(p->rnode->rnode, label1, label2);
-			//codeoutput(expcode1);
+
 			InterCodes expcode2 = translate_Stmt(p->rnode->rnode->rnode->rnode);
+
 			InterCodes expcode3 = translate_Stmt(p->rnode->rnode->rnode->rnode->rnode->rnode);
+			//printf("00000\n");
+			//codeoutput(expcode3);
 			InterCodes exp1 = into_label(label1);
 			InterCodes exp2 = new_intercodes();
 			exp2 = new_noop(exp2, label3);
@@ -407,7 +440,8 @@ InterCodes translate_Stmt(Node* Stmt){
 		InterCodes expcode2 = translate_Stmt(p->rnode->rnode->rnode->rnode);
 		InterCodes exp1 = into_label(label1);
 		InterCodes exp2 = into_label(label2);
-		InterCodes exp3 = new_noop(exp3, label1);
+		InterCodes exp3 = new_intercodes();
+		exp3 = new_noop(exp3, label1);
 		exp3->code->kind = GOTO;
 		InterCodes exp4 = into_label(label3);
 		return combine(combine(combine(combine(combine(exp1, expcode1), exp2), expcode2), exp3), exp4);
@@ -488,24 +522,54 @@ InterCodes translate_Cond(Node* Exp, Operand label_true, Operand label_false){
 //InterCodes translate_Exp();
 InterCodes translate_Args(Node* Args, ARG_LIST arglist){
 	Node* Exp = Args->childnode;
+	ARG_LIST arglist0 = arglist;
+	while(arglist0->prev != NULL){
+		arglist = arglist0->prev;
+		//printf("0000\n");
+	}
 	if(Exp->rnode == NULL){
 		Operand t1 = new_temp();
 		InterCodes code1 = translate_Exp(Exp, t1);
-		ARG_LIST templist = arglist;
-		templist->arg = t1;
-		//templist->next = arglist;
-		arglist = templist;
+		if(arglist0->arg == NULL){
+			ARG_LIST templist = arglist0;
+			templist->arg = t1;
+			//templist->next = arglist;
+			//arglist = templist;
+		}
+		else{
+			ARG_LIST templist = (ARG_LIST)malloc(sizeof(struct ARG_LIST_));
+			templist->prev = NULL;
+			templist->arg = t1;
+			templist->next = arglist0;
+			arglist0->prev = templist;
+
+			//arglist = templist;
+		}
+		
 		//codeoutput(code1);
 		return code1;
 	}
 	else if(!strcmp(Exp->rnode->name , "COMMA")){
 		Operand t1 = new_temp();
 		InterCodes code1 = translate_Exp(Exp ,t1);
-		ARG_LIST templist = (ARG_LIST)malloc(sizeof(struct ARG_LIST_));
-		templist->arg = t1;
-		templist->next = arglist;
-		arglist = templist;
+
+		if(arglist->arg == NULL){
+			ARG_LIST templist = arglist0;
+			templist->arg = t1;
+			//templist->next = arglist;
+			//arglist = templist;
+		}
+		else{
+			ARG_LIST templist = (ARG_LIST)malloc(sizeof(struct ARG_LIST_));
+			templist->prev = NULL;
+			templist->arg = t1;
+			templist->next = arglist0;
+			arglist0->prev = templist;
+			
+			//arglist = templist;
+		}
 		InterCodes code2 = translate_Args(Exp->rnode->rnode, arglist);
+		//codeoutput(combine(code1,code2));
 		return combine(code1,code2);
 	}
 	else{
@@ -518,7 +582,7 @@ InterCodes translate_CompSt(Node* CompSt){
 	Node* point = CompSt->childnode;
 	InterCodes code1 = translate_DefList(point->rnode);
 	//codeoutput(code1);
-	generate(point->rnode->childnode,0);
+	//generate(point->rnode->childnode,0);
 	InterCodes code2 = translate_StmtList(point->rnode->rnode);
 	//
 	return combine(code1,code2);
