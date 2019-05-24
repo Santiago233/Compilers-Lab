@@ -193,7 +193,8 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode->code->u.sinop.result = place;
 		expcode->code->u.sinop.op->kind = VARIABLE;
 		expcode->code->u.sinop.op->u.var_no = lookup(p->val2);
-		//printf("%d\n", lookup(p->val2));
+		//codeoutput(expcode);
+		//printf("%s\n", p->val2);
 		if(place == NULL){
 			expcode->code->kind = EMPTY;
 		}
@@ -207,18 +208,20 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		//expcode2->code->u.sinop.op = new_operand();
 		expcode2->code->u.sinop.result->kind = VARIABLE;
 		expcode2->code->u.sinop.result->u.var_no = lookup(p->childnode->val2);
-		//printf("%s\n", p->val2);
+		//generate(p,0);
+		//printf("%s\n", p->childnode->val2);
 		expcode2->code->u.sinop.op = tmp;
 		InterCodes expcode3 = new_intercodes();
 		expcode3->code->kind = ASSIGN;
 		//expcode3->code->u.sinop.result = new_operand();
-		expcode3->code->u.sinop.op = new_operand();
-		expcode3->code->u.sinop.result = place;
-		expcode3->code->u.sinop.op->kind = VARIABLE;
-		expcode3->code->u.sinop.op->u.var_no = lookup(p->childnode->val2);
+		expcode3->code->u.sinop.op = expcode2->code->u.sinop.result;
+		//expcode3->code->u.sinop.result = place;
+		//expcode3->code->u.sinop.op->kind = VARIABLE;
+		//expcode3->code->u.sinop.op->u.var_no = lookup(p->childnode->val2);
 		if(place == NULL){
 			expcode3->code->kind = EMPTY;
 		}
+
 		expcode2 = combine(expcode2, expcode3);
 		expcode1 = combine(expcode1, expcode2);
 		return expcode1;
@@ -737,7 +740,7 @@ InterCodes translate_Dec(Node* s,Node* Dec){
 		code2->code->kind = ASSIGN;
 		//Operand result = new_operand();
 		result->kind = VARIABLE;
-		result->u.var_no = lookup(point->childnode->name);
+		result->u.var_no = lookup(point->childnode->val2);
 		//printf("%s\n", point->childnode->name);
 		code2->code->u.sinop.result = result;
 		code2->code->u.sinop.op = t1;
