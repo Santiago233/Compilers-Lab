@@ -64,8 +64,8 @@ extern VarList MyVarList[N];	//print for check name
 extern FuncList MyFuncList[N];
 extern struct Type_ TYPE_MYINT;
 extern struct Type_ TYPE_MYFLOAT;
-int tcount = 1;
-int lcount = 1;
+int tcount = 0;
+int lcount = 0;
 int vcount = 1;
 int lookup(char*);
 
@@ -140,31 +140,32 @@ Operand new_operand(){
 Operand get_relop(Node* relop){
 	Operand p = new_operand();
 	p->kind = RELOP_;
-	switch(relop->kind){       //find it in node.h
-		case RELOP_DAYU:{
+	//printf("%s\n", relop->name);
+	if(!strcmp(relop->name,"RELOP_DAYU")){
 			p->u.relop = ">";
-			break;
+			
 		}
-		case RELOP_XIAOYU:{
+	else if(!strcmp(relop->name, "RELOP_XIAOYU")){
 			p->u.relop = "<";
-			break;
+			
 		}
-		case RELOP_DAYUDENGYU:{
+	else if(!strcmp(relop->name, "RELOP_DAYUDENGYU")){
 			p->u.relop = ">=";
-			break;
+			
 		}
-		case RELOP_XIAOYUDENGYU:{
+	else if(!strcmp(relop->name, "RELOP_XIAOYUDENGYU")){
 			p->u.relop = "<=";
-			break;
-		}
-		case RELOP_LIANDENG:{
+			}
+	else if(!strcmp(relop->name, " RELOP_LIANDENG")){
 			p->u.relop = "==";
-			break;
+			
 		}
-		case RELOP_BUDENGYU:{
+	else if(!strcmp(relop->name, "RELOP_BUDENGYU")){
 			p->u.relop = "!=";
-			break;
+			
 		}
+	else{
+		printf("error in get_relop\n");
 	}
 	return p;
 }
@@ -191,6 +192,7 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode->code->u.sinop.result = place;
 		expcode->code->u.sinop.op->kind = VARIABLE;
 		expcode->code->u.sinop.op->u.var_no = lookup(p->val2);
+		//printf("%d\n", lookup(p->val2));
 		if(place == NULL){
 			expcode->code->kind = EMPTY;
 		}
@@ -219,6 +221,24 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode2 = combine(expcode2, expcode3);
 		expcode1 = combine(expcode1, expcode2);
 		return expcode1;
+	}
+	else if(!strcmp(p->name, "MINUS") && !strcmp(p->rnode->name, "Exp")){
+		InterCodes code1,code2;
+		Operand t1 = new_temp();
+		code1 = translate_Exp(p->rnode,t1);
+		code2 = new_intercodes();
+		code2->code->kind = SUB;
+		code2->code->u.binop.result = place;
+		code2->code->u.binop.op2 = t1; 
+		Operand op1 = new_operand();
+		op1->kind = CONSTANT;
+		op1->u.value = 0;
+		code2->code->u.binop.op1 = op1;
+		if(place == NULL){
+			code2->code->kind = EMPTY;
+		}
+		return combine(code1,code2);
+
 	}else if(!strcmp(p->name, "Exp") && (!strcmp(p->rnode->name, "PLUS") || !strcmp(p->rnode->name, "MINUS") || !strcmp(p->rnode->name, "STAR") || !strcmp(p->rnode->name, "DIV"))){
 		Operand tmp1 = new_temp();
 		Operand tmp2 = new_temp();
@@ -291,11 +311,14 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		}
 	}else if(!strcmp(p->name, "ID") && !strcmp(p->rnode->rnode->name, "Args")){
 		char* name = p->val2;
-		ARG_LIST arglist = NULL;
+		ARG_LIST arglist = (ARG_LIST)malloc(sizeof(struct ARG_LIST_));
+		arglist->next = NULL;
+		arglist->arg = NULL;
 		InterCodes expcode1 = translate_Args(p->rnode->rnode, arglist);
+		//generate(p->rnode->rnode,0);
 		if(!strcmp(name, "write")){
 			Operand op = new_operand();
-			op->kind = VARIABLE;
+			op->kind = TEMPORARY;
 			op->u.var_no = arglist->arg->u.var_no;
 			InterCodes expcode2 = new_intercodes();
 			expcode2 = new_noop(expcode2, op);
@@ -333,9 +356,12 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 
 InterCodes translate_Stmt(Node* Stmt){
 	Node* p = Stmt->childnode;
+	//generate(Stmt,0);
 	if(!strcmp(p->name, "Exp")){
 		//printf("000000\n");
-		return translate_Exp(p, NULL);
+		InterCodes code1 = translate_Exp(p, NULL);
+		//codeoutput(code1);
+		return code1;
 	}else if(!strcmp(p->name, "CompSt")){
 		return translate_CompSt(p);
 	}else if(!strcmp(p->name, "RETURN")){
@@ -346,19 +372,23 @@ InterCodes translate_Stmt(Node* Stmt){
 		expcode2->code->kind = RETURN_;
 		return combine(expcode1, expcode2);
 	}else if(!strcmp(p->name, "IF")){
+
 		if(p->rnode->rnode->rnode->rnode->rnode == NULL){
+			
 			Operand label1 = new_label();
 			Operand label2 = new_label();
 			InterCodes expcode1 = translate_Cond(p->rnode->rnode, label1, label2);
 			InterCodes expcode2 = translate_Stmt(p->rnode->rnode->rnode->rnode);
 			InterCodes expcode_1 = into_label(label1);
 			InterCodes expcode_2 = into_label(label2);
+			//codeoutput(expcode_1);
 			return combine(combine(combine(expcode1, expcode_1), expcode2), expcode_2);
 		}else{
 			Operand label1 = new_label();
 			Operand label2 = new_label();
 			Operand label3 = new_label();
 			InterCodes expcode1 = translate_Cond(p->rnode->rnode, label1, label2);
+			//codeoutput(expcode1);
 			InterCodes expcode2 = translate_Stmt(p->rnode->rnode->rnode->rnode);
 			InterCodes expcode3 = translate_Stmt(p->rnode->rnode->rnode->rnode->rnode->rnode);
 			InterCodes exp1 = into_label(label1);
@@ -386,28 +416,30 @@ InterCodes translate_Stmt(Node* Stmt){
 
 InterCodes translate_Cond(Node* Exp, Operand label_true, Operand label_false){
 	Node* point = Exp->childnode;
-	if(!strcmp(point->name ,"EXP") && strstr(point->rnode->name,"RELOP")){
+	//printf("%s\n", strstr(point->rnode->name,"ppp"));
+	if(!strcmp(point->name ,"Exp") && strstr(point->rnode->name,"RELOP")){
+		//printf("00000\n");
 		Operand t1,t2,op;
 		t1 = new_temp();
 		t2 = new_temp();
 		InterCodes code1,code2,code3;
 		code1 = translate_Exp(point, t1);
+		//codeoutput(code1);
 		code2 = translate_Exp(point->rnode->rnode,t2);
 		op = get_relop(point->rnode);
 		code3 = new_if_go(t1,t2,label_true,op);
 		InterCodes code4 = new_intercodes();
 		code4->code->kind = GOTO;
-		//Operand label_false = new_label();
 		code4->code->u.noop.result = label_false;
 		code1 = combine(code1,code2);
 		code1 = combine(code1,code3);
 		code1 = combine(code1,code4);
 		return code1;
 	}
-	else if(!strcmp(point->name,"NOT") && !strcmp(point->rnode->name,"EXP")){
+	else if(!strcmp(point->name,"NOT") && !strcmp(point->rnode->name,"Exp")){
 		return translate_Cond(point->rnode,label_false,label_true);
 	}
-	else if(!strcmp(point->name,"EXP") && !strcmp(point->rnode->name,"AND")){
+	else if(!strcmp(point->name,"Exp") && !strcmp(point->rnode->name,"AND")){
 		Operand label1 = new_label();
 		InterCodes code1,code2,code3;
 		code1 = translate_Cond(point,label1,label_false);
@@ -420,7 +452,7 @@ InterCodes translate_Cond(Node* Exp, Operand label_true, Operand label_false){
 		return code1;
 
 	}
-	else if(!strcmp(point->name,"EXP") && !strcmp(point->rnode->name,"OR")){
+	else if(!strcmp(point->name,"Exp") && !strcmp(point->rnode->name,"OR")){
 		Operand label1 = new_label();
 		InterCodes code1,code2,code3;
 		code1 = translate_Cond(point,label_true,label1);
@@ -459,10 +491,11 @@ InterCodes translate_Args(Node* Args, ARG_LIST arglist){
 	if(Exp->rnode == NULL){
 		Operand t1 = new_temp();
 		InterCodes code1 = translate_Exp(Exp, t1);
-		ARG_LIST templist = (ARG_LIST)malloc(sizeof(struct ARG_LIST_));
+		ARG_LIST templist = arglist;
 		templist->arg = t1;
-		templist->next = arglist;
+		//templist->next = arglist;
 		arglist = templist;
+		//codeoutput(code1);
 		return code1;
 	}
 	else if(!strcmp(Exp->rnode->name , "COMMA")){
@@ -484,8 +517,10 @@ InterCodes translate_Args(Node* Args, ARG_LIST arglist){
 InterCodes translate_CompSt(Node* CompSt){
 	Node* point = CompSt->childnode;
 	InterCodes code1 = translate_DefList(point->rnode);
+	//codeoutput(code1);
+	generate(point->rnode->childnode,0);
 	InterCodes code2 = translate_StmtList(point->rnode->rnode);
-	//codeoutput(code2);
+	//
 	return combine(code1,code2);
 
 }
@@ -528,7 +563,9 @@ InterCodes translate_FunDec(Node* FunDec){
 		result->kind = FUNCTION_NAME;
 		result->u.funcname = point->val2;
 		code1->code->u.noop.result = result;
+
 		code2 = translate_VarList(point->rnode->rnode);
+		//codeoutput(combine(code1,code2));
 		return combine(code1,code2);
 
 	}
@@ -536,10 +573,11 @@ InterCodes translate_FunDec(Node* FunDec){
 }
 InterCodes translate_VarList(Node* VarList){
 	Node* point = VarList->childnode;
-    if(point == NULL || point->rnode->rnode == NULL){
+    if(point == NULL || point->rnode == NULL){
         InterCodes code1 = translate_ParamDec(point);
+        //codeoutput(code1);
     }
-    else if(point->rnode->rnode != NULL){
+    else if(point->rnode != NULL){
         InterCodes code1,code2;
         code1 = translate_ParamDec(point);
         code2 = translate_VarList(point->rnode->rnode);
@@ -548,7 +586,10 @@ InterCodes translate_VarList(Node* VarList){
 }
 InterCodes translate_ParamDec(Node* ParamDec){
 	Node* point = ParamDec->childnode;
-    if(!strcmp(point->childnode->name,"TYPE")){
+	//generate(point,0);
+	
+    if(!strcmp(point->childnode->name,"TYPE: INT")){
+
         Operand result = new_operand();
         result->kind = VARIABLE;
         if(strcmp(point->rnode->childnode->name,"ID"))
@@ -556,7 +597,8 @@ InterCodes translate_ParamDec(Node* ParamDec){
         		printf("Cannot translate: code contains variables of multi-dementional array type or parameters of array type\n");
         		exit(0);
         }
-        result->u.var_no = lookup(point->rnode->childnode->name);
+        result->u.var_no = lookup(point->rnode->childnode->val2);
+        //printf("%s\n", point->rnode->childnode->val2);
         InterCodes code1 = new_intercodes();
         code1->code->kind = PARAM;
         code1->code->u.noop.result = result;
@@ -566,7 +608,8 @@ InterCodes translate_ParamDec(Node* ParamDec){
     else{
     		Operand result = new_operand();
         	result->kind = VARIABLE;
-        	result->u.var_no = lookup(point->rnode->childnode->name);
+        	result->u.var_no = lookup(point->rnode->childnode->val2);
+        	//printf("%s\n", point->rnode->childnode->name);
         	InterCodes code1 = new_intercodes();
        	code1->code->kind = PARAM;
         	code1->code->u.noop.result = result;
@@ -668,6 +711,7 @@ InterCodes translate_ExtDef(Node* ExtDef){
 		InterCodes code1,code2;
 		code1 = translate_FunDec(point->rnode);
 		code2 = translate_CompSt(point->rnode->rnode);
+
 		return combine(code1,code2);
 	}
 
@@ -740,6 +784,7 @@ InterCodes new_if_go(Operand op1,Operand op2,Operand op3,Operand op){
 	p->code->u.if_goto.op2 = op2;
 	p->code->u.if_goto.op3 = op3;
 	p->code->u.if_goto.op = op;
+	return p;
 }
 
 void codeoutput(InterCodes srccode){
@@ -755,7 +800,7 @@ void codeoutput(InterCodes srccode){
 				break;
 			}
 			case LABEL:{
-				printf("label ");
+				printf("LABEL ");
 				opeoutput(tcode->code->u.noop.result);
 				printf(" :\n");
 				break;
