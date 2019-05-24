@@ -279,6 +279,35 @@ InterCodes translate_Exp(Node* Exp, Operand place){
 		expcode1 = combine(expcode1, expcode2);
 		expcode1 = combine(expcode1, expcode3);
 		return expcode1;
+	}else if(!strmcp(p->name, "Exp") && !strmcp(p->rnode->name, "LB")){
+		Node* q = p->rnode->rnode->childnode->childnode;
+		if(*(int*)&q->val != 0){
+			InterCodes expcode1 = new_intercodes();
+			Operand op1 = new_operand();
+			op1->kind = VARIABLE;
+			op1->u.var_no = lookup(p->childnode->name);
+			Operand op2 = new_operand();
+			op2->kind = CONSTANT;
+			op2->u.value = *(int*)&q->val * 4;
+			Operand result = new_temp();
+			expcode1 = new_binop(expcode1, result, op1, op2);
+			expcode1->code->kind = ADD;
+			InterCodes expcode2 = new_intercodes();
+			Operand result_ = new_temp();
+			expcode2 = new_sinop(expcode2, result_, result);
+			expcode2->code->kind = ADDR_TO;
+			return combine(expcode1, expcode2);
+		}else{
+			InterCodes expcode = new_intercodes();
+			Operand op = new_operand();
+			op->kind = VARIABLE;
+			op->u.var_no = lookup(p->childnode->name);
+			Operand result = new_temp();
+			expcode = new_sinop(expcode, result, op);
+			expcode->code->kind = ADDR_TO;
+			return expcode;
+		}
+	}else if(!strcmp(p->name, "Exp") && !strcmp(p->rnode->name, "DOT")){
 	}else if(!strcmp(p->name, "Exp") || !strcmp(p->name, "NOT")){
 		Operand label1 = new_label();
 		Operand label2 = new_label();
