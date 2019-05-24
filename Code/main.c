@@ -111,8 +111,8 @@ int main(int argc, char** argv){
 		//AllCheck(MyVarList, MyFuncList, 0, root);
 		//AllSetpflag(root);
 		//FuncCheckRe(root);
-		Translate(root, argv[2]);
 		printf("Translate compelted!\n");
+		Translate(root, argv[2]);
 	}
 	flag = 0;
 	int j;
