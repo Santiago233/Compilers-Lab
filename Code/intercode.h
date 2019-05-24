@@ -91,8 +91,8 @@ InterCodes translate_Cond(Node*, Operand, Operand);
 InterCodes translate_Args(Node*, ARG_LIST); 
 InterCodes combine(InterCodes, InterCodes);
 InterCodes into_label(Operand);
-void codeoutput();
-void opeoutput();
+void codeoutput(InterCodes);
+void opeoutput(Operand, int);
 
 
 InterCodes translate_CompSt(Node*);
@@ -1029,7 +1029,7 @@ void codeoutput(InterCodes srccode){
 			}
 			case LABEL:{
 				printf("LABEL ");
-				opeoutput(tcode->code->u.noop.result),tcode->code->is_addr;
+				opeoutput(tcode->code->u.noop.result, tcode->code->is_addr);
 				printf(" :\n");
 				break;
 			}

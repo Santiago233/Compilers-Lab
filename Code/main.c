@@ -21,14 +21,12 @@ struct Type_ TYPE_MYINT = {
 struct Type_ TYPE_MYFLOAT = {
 	BASIC , 2
 };
-int main(int argc, char ** argv){
-int i;
-    
-    /*if (argc < 2){
-        yylex();
-        printf("Lexical analysis of one file completed!\n");
-        return 0;
-    }*/
+
+void Translate(Node*, char*);
+
+int main(int argc, char** argv){
+/*	
+	int i;
     if(argc < 2){
         return 1;
     }
@@ -68,12 +66,6 @@ int i;
 		AllInsert_(MyVarList, MyFuncList, 0, root);
 
 		Structgenerate(root,0);
-		/*int k;
-		for(k=0;k<N;k++){
-			if(MyStructList[k] != NULL){
-				printf("%s\n", MyStructList[k]->name);
-			}
-		}*/
 		AllCheck(MyVarList, MyFuncList, 0, root);
 		//printf("error there\n");
 		AllSetpflag(root);
@@ -89,7 +81,54 @@ int i;
 	scount = 0;
 	//printf("%d\n",i);
     }
-	
-	
-    return 0;
+*/
+
+	if(argc < 3){
+        return 1;
+    }
+    extern struct Node* root ;
+	root = (struct Node*)malloc(sizeof(struct Node));
+    FILE *f = fopen(argv[1], "r");
+    if (!f){
+        perror(argv[1]);
+        return 1;
+    }
+    yyrestart(f);
+    yyparse();
+    fclose(f);
+	if(flag == 1){
+		printf("Lexical analysis of one file has gone wrong!\n");
+	}else if(flag == 2){
+		printf("Gramma analysis of one file has gone wrong!\n");
+	}else{
+		printf("Lexical analysis and Gramma analysis of one file compelted!\n");
+		//Treefather(root); 
+		//Arraygenerate(root,0);	
+		lineflag = 1;	
+		//AllInsert(MyVarList, MyFuncList, 0, root);
+		//AllInsert_(MyVarList, MyFuncList, 0, root);
+		//Structgenerate(root,0);
+		//AllCheck(MyVarList, MyFuncList, 0, root);
+		//AllSetpflag(root);
+		//FuncCheckRe(root);
+		Translate(root, argv[2]);
+		printf("Translate compelted!\n");
+	}
+	flag = 0;
+	int j;
+	for(j = 0; j < 1024; j++){
+		Node* p = stack[j];
+		free(p);
+		stack[j] = NULL;
+	}
+	scount = 0;
+	return 0;
+}
+
+void Translate(Node* root, char* name){
+	InterCodes result = translate_Program(root);
+	if(freopen(name,"w",stdout)==NULL)
+        printf("freopen error\n");
+	codeoutput(result);
+	fclose(stdout);
 }
