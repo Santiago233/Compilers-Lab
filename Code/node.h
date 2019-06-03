@@ -100,6 +100,7 @@ extern Node* stack[1024];
 extern int scount ;
 extern myArray* MyArrayList[N];
 extern myStruct* MyStructList[N];
+extern myStruct* Struct_define[N];
 extern Node* root;
 extern char* mystr[1024];
 extern int mystrc ;
@@ -130,6 +131,13 @@ static void MyVar_Insert(VarList[], VarDecList*);
 static void PrintError(Node*);
 static void Structgenerate(Node*, int);
 static void Arraygenerate(Node*, int);
+static void struct_Specifier();
+static void define_Specifier(char* name, Node* DefList);
+static void add_Struct(char* define_name, char* add_name);
+static void add_StructList(char* define_name, Node* list);
+static void add_to_list(char* name, myStruct* mylist[], Type type);
+static void addVar(Node* Declist, FieldList f);
+static myStruct* get_struct(char* name);
 //static void add_node(YYSTYPE p);
 
 
@@ -1934,5 +1942,184 @@ static void PrintError(Node* root){
 		q = q->rnode;
 	}
 }
+
+
+
+
+
+static void struct_build(Node* root)
+{
+	Node* point = root;
+	if(point != NULL && point->line != 0){
+		if(!strcmp(point->name,"ExtDefList")){
+			if(point->line != N){
+				struct_Specifier(point->childnode->childnode);//,point->childnode->childnode->rnode);			
+				struct_build(point->childnode->rnode);
+			}
+			else {
+				return;
+			}
+		}
+		//struct_build(point->childnode);
+			
+	}
+	
+};
+
+static void struct_Specifier(Node* s){
+	//Node* point = DecList;
+	Node* point1 = s->childnode;
+	//printf("0000\n");
+	//Node* point2 = s2;
+	if(strcmp(point1->name , "TYPE: INT")  && strcmp(point1->name,"TYPE: FLOAT")){
+		if(!strcmp(point1->childnode->rnode->name,"OptTag") && point1->childnode->rnode->line!= N && !strcmp(point1->fathernode->rnode->name,"SEMI")){
+			define_Specifier(point1->childnode->rnode->childnode->val2, point1->childnode->rnode->rnode->rnode);
+		}
+		else if(!strcmp(point1->childnode->rnode->name,"OptTag") && point1->childnode->rnode->line!= N && !strcmp(point1->fathernode->rnode->name,"ExtDecList")){
+			define_Specifier(point1->childnode->rnode->childnode->val2, point1->childnode->rnode->rnode->rnode);
+			add_StructList(point1->childnode->rnode->childnode->val2,point1->fathernode->rnode);
+		}
+		else if(!strcmp(point1->childnode->rnode->name,"OptTag") &&  point1->childnode->rnode->line == N){
+			//printf("00000\n");
+			define_Specifier(point1->fathernode->rnode->childnode->childnode->val2, point1->childnode->rnode->rnode->rnode);
+			add_StructList(point1->fathernode->rnode->childnode->childnode->val2,point1->fathernode->rnode);
+		}
+		else if(!strcmp(point1->childnode->rnode->name,"Tag")){
+			//myStruct* temp = get_struct(point1->childnode->rnode->childnode->val2);
+			add_StructList(point1->childnode->rnode->childnode->val2,point1->fathernode->rnode);
+			//add_to_list(add_name, MyStructList, temp->mytype);
+
+		}
+	}
+}
+
+static void define_Specifier(char* name, Node* DefList){
+	Node* point = DefList;
+	myStruct* mys1 = (struct myStruct*)malloc(sizeof(struct myStruct));
+	Type temp = (Type)malloc(sizeof(struct Type_));
+	FieldList f =  (FieldList)malloc(sizeof(struct FieldList_));
+	mys1->mytype = temp;
+	mys1->name = name;
+	f->type = NULL;
+	f->tail = NULL;
+	temp->u.structure = f;
+	temp->kind = STRUCTURE;
+	if(point->childnode->line != N && point->childnode->rnode->childnode->line != N){
+		addVar(point->childnode->childnode->rnode, f);
+		addVar(point->childnode->rnode->childnode->childnode->rnode,f);
+
+	}
+	else if(point->childnode->line != N && point->childnode->rnode->childnode->line == N){
+		addVar(point->childnode->childnode->rnode, f);
+	}
+	else if(point->childnode->line == N){
+		//return;
+	}
+	add_to_list(name, Struct_define, mys1->mytype);
+	//int val = hash_pjw("ooo");
+	
+}
+static void add_to_list(char* name, myStruct* mylist[], Type type){
+	int val = hash_pjw(name);//hashnode
+				//printf("%s %d\n",head->name,val);
+	if(mylist[val] == NULL){
+		mylist[val] = (myStruct*)malloc(sizeof(myStruct));
+		mylist[val]->name = name;
+		mylist[val]->mytype = type;
+		return;
+	}
+	else
+	{
+		
+		int val_ = (val + 1) % N;
+		while(val_ != val){
+			if(mylist[val_] == NULL){
+				mylist[val_] = (myStruct*)malloc(sizeof(myStruct));
+				mylist[val_]->name = name;
+				mylist[val_]->mytype = type;
+				return;
+			}
+									
+			val_ = (val_ + 1) % N;
+		}
+			
+		
+	}
+}
+static myStruct* get_struct(char* name){
+	int val = hash_pjw(name);//hashnode
+				//printf("%s %d\n",head->name,val);
+	if(!strcmp(name,Struct_define[val]->name)){
+		return Struct_define[val];
+	}
+	else
+	{			
+		if(!strcmp(Struct_define[val]->name,name)){
+							//printf("%s %s\n",name,MyArrayList[val]->name);
+			return Struct_define[val];
+				
+		}
+		else{
+			int val_ = (val + 1) % N;
+			while(val_ != val){
+				if(!strcmp(Struct_define[val]->name,name))	{
+					return Struct_define[val];
+				}
+				val_ = (val_ + 1) % N;
+			}
+		}
+	}
+}
+static void add_Struct(char* define_name, char* add_name){
+	myStruct* temp = get_struct(define_name);
+	add_to_list(add_name, MyStructList, temp->mytype);
+	//int define_num = hash_pjw(define_name);
+}
+
+static void add_StructList(char* define_name, Node* list){
+	//add_to_list(define_name, Struct_define);
+	Node* point = list->childnode;
+	add_Struct(define_name, point->childnode->val2);
+	if(point->rnode != NULL){
+		add_StructList(define_name,point->rnode->rnode);
+	}
+}
+
+static void addVar(Node* DecList, FieldList f){
+	FieldList tempf = f;
+	Node* point = DecList->childnode;
+	if(tempf->type == NULL){
+		tempf->name = point->childnode->childnode->val2;
+		Type tempt = (Type)malloc(sizeof(Type_));
+		tempt->kind = BASIC;
+		tempt->u.basic = 1;
+		tempf->type = tempt;
+
+	}
+	else{
+		while(tempf->tail != NULL){
+			tempf = tempf->tail;
+		}
+		FieldList p = malloc(sizeof(FieldList_));
+		tempf->tail = p;
+		p->name = point->childnode->childnode->val2;
+		Type tempt = (Type)malloc(sizeof(Type_));
+		tempt->kind = BASIC;
+		tempt->u.basic = 1;
+		p->type = tempt;
+		p->tail = NULL;
+
+	}
+	if(point->rnode != NULL)
+	{
+		addVar(point->rnode->rnode,f);
+	}
+	else{
+		return;
+	}
+
+}
+
+
 
 #endif

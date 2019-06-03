@@ -12,6 +12,7 @@ myArray* MyArrayList[N] = {NULL};
 VarList MyVarList[N] = {NULL};	//print for check name
 FuncList MyFuncList[N] = {NULL};
 myStruct* MyStructList[N] = {NULL};
+myStruct* Struct_define[N] = {NULL};
 int mystrc = 0;
 int lineflag = 0;
 struct Type_ TYPE_MYINT = {
@@ -102,7 +103,12 @@ int main(int argc, char** argv){
 		printf("Gramma analysis of one file has gone wrong!\n");
 	}else{
 		printf("Lexical analysis and Gramma analysis of one file compelted!\n");
-		//Treefather(root); 
+		//generate(root,0);
+		
+		Treefather(root); 
+		struct_build(root->childnode);
+		int i;
+		
 		//Arraygenerate(root,0);	
 		lineflag = 1;	
 		//AllInsert(MyVarList, MyFuncList, 0, root);
@@ -111,8 +117,8 @@ int main(int argc, char** argv){
 		//AllCheck(MyVarList, MyFuncList, 0, root);
 		//AllSetpflag(root);
 		//FuncCheckRe(root);
-		printf("Translate compelted!\n");
 		Translate(root, argv[2]);
+		printf("Translate compelted!\n");
 	}
 	flag = 0;
 	int j;
